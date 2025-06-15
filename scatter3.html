@@ -10,12 +10,15 @@
     body{font-family:"Helvetica Neue",Arial,sans-serif;background:#f5f5f5;margin:0;padding:20px;color:#333}
     h1{text-align:center;margin:0 0 15px;font-size:1.45rem}
     #chart-container{display:flex;flex-direction:column;align-items:center}
-    #controls{margin:18px 0;display:flex;gap:18px;align-items:center;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow-sm),var(--inset);padding:10px 18px;border:1px solid #d5d5d5}
+    /* controls */
+    #controls{margin:18px 0;display:flex;gap:18px;align-items:center;background:var(--card-bg);
+              border-radius:10px;box-shadow:var(--shadow-sm),var(--inset);padding:10px 18px;border:1px solid #d5d5d5}
     input[type=range]{-webkit-appearance:none;width:240px;height:6px;background:#d0d0d0;border-radius:3px;outline:none}
     input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#616161;border:2px solid #fff;cursor:pointer;box-shadow:var(--shadow-sm)}
     input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#616161;border:2px solid #fff;cursor:pointer;box-shadow:var(--shadow-sm)}
     button{background:#616161;color:#fff;border:none;border-radius:6px;padding:6px 16px;font-size:.9rem;cursor:pointer;box-shadow:var(--shadow-sm)}
     button:hover{background:#424242}
+    /* metrics */
     #metrics{display:flex;gap:40px;flex-wrap:wrap;justify-content:center;margin-top:10px}
     .metric-box{background:var(--card-bg);border-radius:10px;padding:12px 22px;box-shadow:var(--shadow-lg),var(--inset);text-align:center;min-width:240px}
     .metric-box h3{margin:0 0 6px;font-size:.95rem;color:#666}
@@ -83,7 +86,7 @@
 </div>
 
 <script>
-const REV_PER_LOAN=2500, LGD_PER_LOAN=6500, CSV_PATH="data.csv", RADIUS=14, FADE=0.2, BASE_ACC=0.70;
+const REV_PER_LOAN=2500, LGD_PER_LOAN=6500, CSV_PATH="data.csv", RADIUS=14, FADE=0.2;
 
 /* Scales */
 const svg=d3.select("#scatter"),W=+svg.attr("width"),H=+svg.attr("height"),
@@ -98,8 +101,7 @@ d3.csv(CSV_PATH,d3.autoType).then(raw=>{
       v=>({telco:v[0]["FinScore Telco"],bank:v[0]["Bank Internal Score"],comb:v[0]["Combined Score"],bad:d3.mean(v,d=>d["Good/Bad Flag"]),n:v.length}),
       d=>`${d["FinScore Telco"]}-${d["Bank Internal Score"]}-${d["Combined Score"]}`).map(d=>d[1]);
 
-  const approvedRows=d3.sum(data,d=>d.n);
-  const totalApps=approvedRows/BASE_ACC;   // scale so threshold 1 = 70 % approval
+  const totalApps=d3.sum(data,d=>d.n);  // denominator = rows in CSV
 
   /* Axes */
   svg.append("g").attr("transform",`translate(0,${H-M.bottom})`).call(d3.axisBottom(x).ticks(10))
@@ -128,24 +130,24 @@ d3.csv(CSV_PATH,d3.autoType).then(raw=>{
         .attr("class","hl").attr("cx",d=>x(d.telco)-RADIUS/3).attr("cy",d=>y(d.bank)-RADIUS/3)
         .attr("r",RADIUS*0.4).attr("fill","#fff").attr("opacity",0.18).attr("pointer-events","none");
   gDots.selectAll("text").data(data).join("text")
-        .attr("x",d=>x(d.telco)).attr("y",d=>y(d.bank)).attr("dy",".35em").attr("text-anchor","middle")
-        .attr("font-size",".78rem").attr("font-weight","bold").attr("fill","#000")
-        .attr("pointer-events","none").text(d=>d3.format(".0%")(d.bad));
+        .attr("x",d=>x(d.telco)).attr("y",d=>y(d.bank)).attr("dy",".35em")
+        .attr("text-anchor","middle").attr("font-size",".78rem").attr("font-weight","bold")
+        .attr("fill","#000").attr("pointer-events","none").text(d=>d3.format(".0%")(d.bad));
 
   /* Tooltip */
   const tip=d3.select("body").append("div").style("position","absolute").style("pointer-events","none")
         .style("background","#fff").style("border","1px solid #ccc").style("padding","6px 10px")
         .style("border-radius","6px").style("box-shadow","var(--shadow-sm)").style("font-size",".8rem").style("opacity",0);
   gDots.selectAll("circle.main").on("mouseover",(e,d)=>tip.style("opacity",1).html(
-        `<strong>FinScore Telco:</strong> ${d.telco}<br>
-         <strong>Bank Score:</strong> ${d.bank}<br>
-         <strong>Combined Score:</strong> ${d.comb}<br>
-         <strong>Avg Default:</strong> ${(d.bad*100).toFixed(1)}%<br>
-         <strong>Observations:</strong> ${d.n}`))
-     .on("mousemove",e=>tip.style("left",(e.pageX+12)+"px").style("top",(e.pageY-30)+"px"))
-     .on("mouseout",()=>tip.style("opacity",0));
+      `<strong>FinScore Telco:</strong> ${d.telco}<br>
+       <strong>Bank Score:</strong> ${d.bank}<br>
+       <strong>Combined Score:</strong> ${d.comb}<br>
+       <strong>Avg Default:</strong> ${(d.bad*100).toFixed(1)}%<br>
+       <strong>Observations:</strong> ${d.n}`))
+    .on("mousemove",e=>tip.style("left",(e.pageX+12)+"px").style("top",(e.pageY-30)+"px"))
+    .on("mouseout",()=>tip.style("opacity",0));
 
-  /* Stat helpers */
+  /* Stat helper */
   const stats=f=>{const s=data.filter(f),n=d3.sum(s,d=>d.n);return {acc:n/totalApps,pd:n?d3.sum(s,d=>d.n*d.bad)/n:0,n};};
 
   /* ROI curve */
@@ -181,15 +183,10 @@ d3.csv(CSV_PATH,d3.autoType).then(raw=>{
             netApp=netLoan*sComb.acc,
             netAppBank=(REV_PER_LOAN-(sBank.pd*LGD_PER_LOAN))*sBank.acc;
 
-      accSp.text((sComb.acc*100).toFixed(1)+"%");
-      defSp.text((sComb.pd*100).toFixed(1)+"%");
-      accBankSp.text((sBank.acc*100).toFixed(1)+"%");
-      defBankSp.text((sBank.pd*100).toFixed(1)+"%");
-      accTelSp.text((sTel.acc*100).toFixed(1)+"%");
-      defTelSp.text((sTel.pd*100).toFixed(1)+"%");
-      benLoanSp.text("₱"+netLoan.toFixed(0));
-      benAppSp.text("₱"+netApp.toFixed(0));
-      benAppBankSp.text("₱"+netAppBank.toFixed(0));
+      accSp.text((sComb.acc*100).toFixed(1)+"%"); defSp.text((sComb.pd*100).toFixed(1)+"%");
+      accBankSp.text((sBank.acc*100).toFixed(1)+"%"); defBankSp.text((sBank.pd*100).toFixed(1)+"%");
+      accTelSp.text((sTel.acc*100).toFixed(1)+"%"); defTelSp.text((sTel.pd*100).toFixed(1)+"%");
+      benLoanSp.text("₱"+netLoan.toFixed(0)); benAppSp.text("₱"+netApp.toFixed(0)); benAppBankSp.text("₱"+netAppBank.toFixed(0));
 
       thinSp.text(d3.sum(data.filter(d=>d.bank>=8&&d.telco>=6&&fComb(d)),d=>d.n));
 
@@ -200,9 +197,7 @@ d3.csv(CSV_PATH,d3.autoType).then(raw=>{
       rSvg.select("#roi-current").attr("cx",rx(t)).attr("cy",ry(netApp));
   }
 
-  /* Start at threshold 1 (slider left) to show 70 % approval */
-  update(1);
-
+  update(1);                         // slider starts left (100 % approval of CSV rows)
   slider.on("input",function(){update(+this.value);});
 
   let timer=null;
@@ -215,6 +210,7 @@ d3.csv(CSV_PATH,d3.autoType).then(raw=>{
 </script>
 </body>
 </html>
+
 
 
 
