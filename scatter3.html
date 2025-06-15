@@ -100,7 +100,7 @@ const data = [{"FinScore Telco":1.0,"Bank Internal Score":1.0,"Combined Score":8
 const svg = d3.select("#scatter"),
       width = +svg.attr("width"),
       height = +svg.attr("height"),
-      margin = {{top:40,right:40,bottom:60,left:60}};
+      margin = {top:40,right:40,bottom:60,left:60};
 
 const x = d3.scaleLinear().domain([1,10]).range([margin.left, width - margin.right]),
       y = d3.scaleLinear().domain([10,1]).range([margin.top, height - margin.bottom]); // Inverted y axis
