@@ -3,28 +3,34 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<title>FinScore vs Bank Score Scatterplot</title>
+<title>Bank Internal Score &amp; FinScore Telco</title>
 <script src="d3.v7.min.js"></script>
 <style>
     body{font-family:"Helvetica Neue",Arial,sans-serif;background:#f5f5f5;margin:0;padding:20px;color:#333}
-    h1{text-align:center;margin-bottom:10px}
+    h1{text-align:center;margin:0 0 15px 0;font-size:1.4rem}
     #chart-container{display:flex;flex-direction:column;align-items:center}
-    #controls{margin:15px 0;display:flex;gap:20px;align-items:center}
+    #controls{margin:18px 0;display:flex;gap:18px;align-items:center;
+              background:#fafafa;border:1px solid #ddd;border-radius:8px;padding:10px 16px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+    input[type="range"]{-webkit-appearance:none;width:220px;height:6px;background:#e0e0e0;border-radius:3px;outline:none}
+    input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#616161;border:2px solid #fff;cursor:pointer}
+    input[type="range"]::-moz-range-thumb   {width:16px;height:16px;border-radius:50%;background:#616161;border:2px solid #fff;cursor:pointer}
+    button{background:#616161;color:#fff;border:none;border-radius:4px;padding:6px 12px;font-size:.9rem;cursor:pointer}
+    button:hover{background:#424242}
     #metrics{display:flex;gap:40px;flex-wrap:wrap;justify-content:center;margin-top:10px}
-    .metric-box{background:#fff;border-radius:8px;padding:10px 20px;box-shadow:0 2px 6px rgba(0,0,0,.1);text-align:center;min-width:160px}
+    .metric-box{background:#fff;border-radius:8px;padding:10px 20px;box-shadow:0 2px 6px rgba(0,0,0,.08);text-align:center;min-width:160px}
     .metric-box h3{margin:0 0 5px 0;font-size:.9rem;color:#666}
-    .metric-box span{font-size:1.4rem;font-weight:bold}
-    .legend{display:flex;align-items:center;gap:8px;margin-top:10px}
+    .metric-box span{font-size:1.5rem;font-weight:bold}
+    .legend{display:flex;align-items:center;gap:8px;margin-top:12px}
 </style>
 </head>
 <body>
-<h1>FinScore Telco vs Bank Internal Score</h1>
+<h1>Bank Internal Score &amp; FinScore Telco</h1>
 
 <div id="chart-container">
     <svg id="scatter" width="800" height="600"></svg>
 
     <div id="controls">
-        <label for="threshold">Combined Score ≥ <span id="thresh-val"></span></label>
+        <label for="threshold"><strong>Combined&nbsp;Score&nbsp;≥</strong>&nbsp;<span id="thresh-val"></span></label>
         <input type="range" id="threshold" min="1" max="10" step="1" value="1">
         <button id="toggle">Play</button>
     </div>
@@ -32,7 +38,7 @@
     <div id="metrics">
         <div class="metric-box"><h3>Acceptance Rate</h3><span id="acc-rate">0%</span></div>
         <div class="metric-box"><h3>Default Rate</h3><span id="def-rate">0%</span></div>
-        <div class="metric-box"><h3>Monetary benefit<br/>per application (PHP)</h3><span id="benefit">₱0</span></div>
+        <div class="metric-box"><h3>Monetary&nbsp;benefit<br/>per&nbsp;application&nbsp;(PHP)</h3><span id="benefit">₱0</span></div>
     </div>
 
     <div class="legend" id="legend"></div>
@@ -40,9 +46,9 @@
 
 <script>
 /* ---------------------------------------------------------------
-   0.  CONFIGURE WHERE THE CSV LIVES
+   0.  PATH TO CSV
    ------------------------------------------------------------- */
-const CSV_PATH = "data.csv";      // ← CHANGE THIS to your GitHub raw link if needed
+const CSV_PATH = "data.csv";    // change to raw GitHub URL if needed
 
 /* ---------------------------------------------------------------
    1.  SVG & STATIC SCALES
@@ -50,174 +56,166 @@ const CSV_PATH = "data.csv";      // ← CHANGE THIS to your GitHub raw link if 
 const svg  = d3.select("#scatter"),
       W    = +svg.attr("width"),
       H    = +svg.attr("height"),
-      M    = {top:40,right:40,bottom:60,left:60};
+      M    = {top:40,right:40,bottom:70,left:90};
 
 const x = d3.scaleLinear().domain([1,10]).range([M.left, W-M.right]),
-      y = d3.scaleLinear().domain([1,10]).range([M.top, H-M.bottom]);  // later we invert with .domain([10,1])
+      y = d3.scaleLinear().domain([10,1]).range([M.top, H-M.bottom]);   // inverted
 
-/* 6-bucket colour palette */
+/* colour buckets */
 const colour = d3.scaleThreshold()
   .domain([0.11,0.20,0.32,0.42,0.50])
   .range(["#9CCC65","#D4E157","#FFEE58","#FFCA28","#FFA726","#FF7043"]);
 
-const RADIUS = 10;
+const RADIUS = 12;                 // larger dots
+const FADE_OPACITY = 0.2;          // opacity for dots below threshold
 
 /* ---------------------------------------------------------------
-   2.  LOAD CSV → CLEAN → AGGREGATE → DRAW
+   2.  LOAD → CLEAN → AGGREGATE → DRAW
    ------------------------------------------------------------- */
 d3.csv(CSV_PATH, d3.autoType).then(raw => {
 
-  /* 2.1  drop any row that contains #N/A */
-  const clean = raw.filter(row =>
-    !Object.values(row).some(v => v === "#N/A" || v === null));
+  const clean = raw.filter(r => !Object.values(r).some(v => v === "#N/A" || v === null));
 
-  /* 2.2  aggregate to unique score combos */
-  const rolled = d3.rollups(
+  const data = d3.rollups(
       clean,
       v => ({
         telco: v[0]["FinScore Telco"],
         bank:  v[0]["Bank Internal Score"],
         comb:  v[0]["Combined Score"],
-        badAvg: d3.mean(v, d => d["Good/Bad Flag"]),
-        n: v.length
+        bad:   d3.mean(v, d=>d["Good/Bad Flag"]),
+        n:     v.length
       }),
       d => `${d["FinScore Telco"]}-${d["Bank Internal Score"]}-${d["Combined Score"]}`
-    ).map(d => d[1]);
+    ).map(d=>d[1]);
 
-  /* 2.3  invert y-axis so best (10) is top */
-  y.domain([10,1]);
+  /* ------------------- axes ------------------- */
+  const ax = svg.append("g")
+    .attr("class","axes");
 
-  /* -----------------------------------------------------------
-     3.  AXES
-     --------------------------------------------------------- */
-  svg.append("g")
-     .attr("transform",`translate(0,${H-M.bottom})`)
-     .call(d3.axisBottom(x).ticks(10))
-   .append("text")
-     .attr("x",W/2).attr("y",40)
-     .attr("fill","#000").attr("font-weight","bold")
-     .attr("text-anchor","middle")
-     .text("FinScore Telco (1 = low, 10 = high)");
+  ax.append("g")
+    .attr("transform",`translate(0,${H-M.bottom})`)
+    .call(d3.axisBottom(x).ticks(10))
+    .call(g => g.selectAll(".domain, .tick line").attr("stroke-width",2));
 
-  svg.append("g")
-     .attr("transform",`translate(${M.left},0)`)
-     .call(d3.axisLeft(y).ticks(10))
-   .append("text")
-     .attr("transform","rotate(-90)")
-     .attr("x",-H/2).attr("y",-45)
-     .attr("fill","#000").attr("font-weight","bold")
-     .attr("text-anchor","middle")
-     .text("Bank Internal Score (10 = best, 1 = worst)");
+  ax.append("g")
+    .attr("transform",`translate(${M.left},0)`)
+    .call(d3.axisLeft(y).ticks(10))
+    .call(g => g.selectAll(".domain, .tick line").attr("stroke-width",2));
 
-  /* -----------------------------------------------------------
-     4.  POINTS + BLACK LABELS
-     --------------------------------------------------------- */
+  /* axis labels */
+  svg.append("text")
+      .attr("x",W/2).attr("y",H-M.bottom+45)
+      .attr("text-anchor","middle")
+      .attr("font-size","14px").attr("font-weight","bold")
+      .text("FinScore Telco (1 = low, 10 = high)");
+
+  svg.append("text")
+      .attr("transform","rotate(-90)")
+      .attr("x",-H/2).attr("y",M.left-60)
+      .attr("text-anchor","middle")
+      .attr("font-size","14px").attr("font-weight","bold")
+      .text("Bank Internal Score (10 = best, 1 = worst)");
+
+  /* ------------------- dots & labels ------------------- */
   const gDots = svg.append("g");
 
   gDots.selectAll("circle")
-    .data(rolled)
+    .data(data)
     .join("circle")
-      .attr("cx", d => x(d.telco))
-      .attr("cy", d => y(d.bank))
-      .attr("r",  RADIUS)
-      .attr("fill", d => colour(d.badAvg))
-      .attr("stroke","#333").attr("stroke-width",0.6)
-      .attr("opacity",0.9);
+      .attr("cx",d=>x(d.telco))
+      .attr("cy",d=>y(d.bank))
+      .attr("r",RADIUS)
+      .attr("fill",d=>colour(d.bad))
+      .attr("stroke","#333").attr("stroke-width",0.7);
 
   gDots.selectAll("text")
-    .data(rolled)
+    .data(data)
     .join("text")
-      .attr("x", d => x(d.telco))
-      .attr("y", d => y(d.bank))
-      .text(d => d3.format(".0%")(d.badAvg))
-      .attr("font-size",".65rem")
+      .attr("x",d=>x(d.telco))
+      .attr("y",d=>y(d.bank))
+      .attr("dy",".35em")
+      .attr("text-anchor","middle")
+      .attr("font-size",".7rem")
       .attr("font-weight","bold")
       .attr("fill","#000")
-      .attr("text-anchor","middle")
-      .attr("dy",".35em")
-      .attr("pointer-events","none");
+      .attr("pointer-events","none")
+      .text(d=>d3.format(".0%")(d.bad));
 
-  /* -----------------------------------------------------------
-     5.  TOOLTIP
-     --------------------------------------------------------- */
+  /* tooltip */
   const tt = d3.select("body").append("div")
-        .style("position","absolute")
-        .style("pointer-events","none")
-        .style("background","#fff")
-        .style("border","1px solid #ccc")
-        .style("padding","6px 10px")
-        .style("border-radius","4px")
-        .style("font-size",".8rem")
-        .style("opacity",0);
+        .style("position","absolute").style("pointer-events","none")
+        .style("background","#fff").style("border","1px solid #ccc")
+        .style("padding","6px 10px").style("border-radius","4px")
+        .style("font-size",".8rem").style("opacity",0);
 
   gDots.selectAll("circle")
     .on("mouseover",(e,d)=>tt.style("opacity",1).html(
         `<strong>FinScore Telco:</strong> ${d.telco}<br>
          <strong>Bank Score:</strong> ${d.bank}<br>
          <strong>Combined Score:</strong> ${d.comb}<br>
-         <strong>Avg Default:</strong> ${(d.badAvg*100).toFixed(1)}%<br>
+         <strong>Avg Default:</strong> ${(d.bad*100).toFixed(1)}%<br>
          <strong>Observations:</strong> ${d.n}`))
-    .on("mousemove",e => tt.style("left",(e.pageX+10)+"px").style("top",(e.pageY-28)+"px"))
-    .on("mouseout", ()=>tt.style("opacity",0));
+    .on("mousemove",e=>tt.style("left",(e.pageX+10)+"px").style("top",(e.pageY-28)+"px"))
+    .on("mouseout",()=>tt.style("opacity",0));
 
-  /* -----------------------------------------------------------
-     6.  LEGEND
-     --------------------------------------------------------- */
-  const legendData = [
-    ["0–10%", "#9CCC65"],
-    ["11–19%","#D4E157"],
-    ["20–31%","#FFEE58"],
-    ["32–41%","#FFCA28"],
-    ["42–49%","#FFA726"],
-    ["50–100%","#FF7043"]
+  /* legend */
+  const lgData=[
+    ["0–10%","#9CCC65"],["11–19%","#D4E157"],["20–31%","#FFEE58"],
+    ["32–41%","#FFCA28"],["42–49%","#FFA726"],["50–100%","#FF7043"]
   ];
-  const legend = d3.select("#legend").html("").append("svg")
-                   .attr("width",420).attr("height",32);
+  const lg = d3.select("#legend").html("").append("svg")
+               .attr("width",440).attr("height",40);
 
-  legend.selectAll("g")
-    .data(legendData)
-    .join("g")
+  lg.selectAll("g")
+    .data(lgData).join("g")
       .attr("transform",(d,i)=>`translate(${i*70},0)`)
     .call(g=>{
-        g.append("rect").attr("x",0).attr("y",8).attr("width",14).attr("height",14)
-          .attr("fill",d=>d[1]).attr("stroke","#333").attr("stroke-width",.3);
-        g.append("text").attr("x",18).attr("y",20).attr("font-size",".8rem").text(d=>d[0]);
+       g.append("rect").attr("x",0).attr("y",10).attr("width",14).attr("height",14)
+        .attr("fill",d=>d[1]).attr("stroke","#333").attr("stroke-width",.4);
+       g.append("text").attr("x",18).attr("y",22)
+        .attr("font-size",".8rem").text(d=>d[0]);
     });
 
-  /* -----------------------------------------------------------
-     7.  SLIDER + METRICS + PLAY/PAUSE
-     --------------------------------------------------------- */
+  /* ------------------- slider logic ------------------- */
   const slider  = d3.select("#threshold"),
         threshV = d3.select("#thresh-val"),
         accSp   = d3.select("#acc-rate"),
         defSp   = d3.select("#def-rate"),
         benSp   = d3.select("#benefit"),
-        totalN  = d3.sum(rolled, d=>d.n);
+        totalN  = d3.sum(data,d=>d.n);
 
-  function updateMetrics(th){
+  function update(th){
       threshV.text(th);
-      const accepted = rolled.filter(d=>d.comb >= th),
-            nAcc     = d3.sum(accepted,d=>d.n),
-            accRate  = nAcc/totalN,
-            defRate  = nAcc ? d3.sum(accepted,d=>d.n*d.badAvg)/nAcc : 0;
-      accSp.text((accRate*100).toFixed(1)+"%");
-      defSp.text((defRate*100).toFixed(1)+"%");
-      benSp.text("₱"+(accRate*830).toFixed(0));
-  }
-  slider.on("input",function(){updateMetrics(+this.value);});
-  updateMetrics(+slider.node().value);
+      const show =    d => d.comb >= th,
+            acc  = data.filter(show),
+            nAcc = d3.sum(acc,d=>d.n),
+            accR = nAcc/totalN,
+            defR = nAcc ? d3.sum(acc,d=>d.n*d.bad)/nAcc : 0;
 
-  let timer=null;
+      accSp.text((accR*100).toFixed(1)+"%");
+      defSp.text((defR*100).toFixed(1)+"%");
+      benSp.text("₱"+(accR*830).toFixed(0));
+
+      gDots.selectAll("circle")
+        .attr("opacity",d=>show(d)?1:FADE_OPACITY);
+      gDots.selectAll("text")
+        .attr("opacity",d=>show(d)?1:FADE_OPACITY);
+  }
+  slider.on("input",function(){update(+this.value);});
+  update(+slider.node().value);
+
+  /* play / pause */
+  let t=null;
   d3.select("#toggle").on("click",function(){
-      if(timer){clearInterval(timer);timer=null;this.textContent="Play";return;}
+      if(t){clearInterval(t);t=null;this.textContent="Play";return;}
       this.textContent="Pause";
-      timer=setInterval(()=>{
-         let v=+slider.node().value;v=v<10? v+1:1;
-         slider.node().value=v;updateMetrics(v);
-      },1500);
+      t=setInterval(()=>{
+          let v=+slider.node().value;v=v<10?v+1:1;
+          slider.node().value=v;update(v);
+      },1400);
   });
 
-}); // end of csv load
+});
 </script>
 </body>
 </html>
