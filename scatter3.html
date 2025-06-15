@@ -177,16 +177,15 @@ d3.csv(CSV_PATH,d3.autoType).then(raw=>{
 
   function update(t){
       threshV.text(t);
-
       const fComb=d=>d.comb>=t, fTel=d=>d.telco>=t, fBank=d=>d.bank<=11-t;
-
       const sComb=stats(fComb), sBank=stats(fBank), sTel=stats(fTel);
 
       const netLoan=REV_PER_LOAN-(sComb.pd*LGD_PER_LOAN),
             netApp=netLoan*sComb.acc,
             netAppBank=(REV_PER_LOAN-(sBank.pd*LGD_PER_LOAN))*sBank.acc;
 
-      accSp.text((sComb.acc*100).toFixed(1)+"%"); defSp.text((sComb.pd*100).toFixed(1)+"%");
+      accSp.text((sComb.acc*100).toFixed(1)+"%");
+      defSp.text((sComb.pd*100).toFixed(1)+"%");
       accBankSp.text((sBank.acc*100).toFixed(1)+"%"); defBankSp.text((sBank.pd*100).toFixed(1)+"%");
       accTelSp.text((sTel.acc*100).toFixed(1)+"%");  defTelSp.text((sTel.pd*100).toFixed(1)+"%");
       benLoanSp.text("₱"+netLoan.toFixed(0)); benAppSp.text("₱"+netApp.toFixed(0)); benAppBankSp.text("₱"+netAppBank.toFixed(0));
@@ -200,10 +199,11 @@ d3.csv(CSV_PATH,d3.autoType).then(raw=>{
       rSvg.select("#roi-current").attr("cx",rx(t)).attr("cy",ry(netApp));
   }
 
-  /* Slider & play/pause */
+  /* Slider events */
   slider.on("input",function(){update(+this.value);});
   update(1);
 
+  /* play/pause */
   let timer=null;
   d3.select("#toggle").on("click",function(){
       if(timer){clearInterval(timer);timer=null;this.textContent="Play";return;}
@@ -211,16 +211,16 @@ d3.csv(CSV_PATH,d3.autoType).then(raw=>{
       timer=setInterval(()=>{let v=+slider.node().value;v=v<10?v+1:1;slider.node().value=v;update(v);},1500);
   });
 
-  /* Target default-rate logic */
+  /* ---------- Target default-rate logic (nearest match) ---------- */
   targetBox.on("change blur",function(){
       const v=parseFloat(this.value);
-      if(isNaN(v)){this.value="";return;}          // blank input, ignore
+      if(isNaN(v)){this.value="";return;}        // blank -> ignore
       const target=v/100;
 
       let best=1, bestPd=stats(d=>d.comb>=1).pd;
       d3.range(1,11).forEach(t=>{
-         const pd=stats(d=>d.comb>=t).pd;
-         if(pd<=target && target-pd<target-bestPd){best=t;bestPd=pd;}
+          const pd=stats(d=>d.comb>=t).pd;
+          if(Math.abs(pd-target) < Math.abs(bestPd-target)){best=t; bestPd=pd;}
       });
       slider.node().value=best;
       update(best);
