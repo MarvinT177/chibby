@@ -6,28 +6,30 @@
 <title>Bank Internal Score &amp; FinScore Telco</title>
 <script src="d3.v7.min.js"></script>
 <style>
+    :root{--card-bg:#fafafa;--shadow:0 1px 3px rgba(0,0,0,.05);--axis:#555}
     body{font-family:"Helvetica Neue",Arial,sans-serif;background:#f5f5f5;margin:0;padding:20px;color:#333}
-    h1{text-align:center;margin:0 0 15px 0;font-size:1.4rem}
+    h1{text-align:center;margin:0 0 15px 0;font-size:1.45rem}
     #chart-container{display:flex;flex-direction:column;align-items:center}
     #controls{margin:18px 0;display:flex;gap:18px;align-items:center;
-              background:#fafafa;border:1px solid #ddd;border-radius:8px;padding:10px 16px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
-    input[type="range"]{-webkit-appearance:none;width:220px;height:6px;background:#e0e0e0;border-radius:3px;outline:none}
-    input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#616161;border:2px solid #fff;cursor:pointer}
-    input[type="range"]::-moz-range-thumb   {width:16px;height:16px;border-radius:50%;background:#616161;border:2px solid #fff;cursor:pointer}
-    button{background:#616161;color:#fff;border:none;border-radius:4px;padding:6px 12px;font-size:.9rem;cursor:pointer}
+              background:var(--card-bg);border:1px solid #ddd;border-radius:8px;padding:10px 16px;box-shadow:var(--shadow)}
+    input[type="range"]{-webkit-appearance:none;width:240px;height:6px;background:#e0e0e0;border-radius:3px;outline:none}
+    input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#616161;border:2px solid #fff;cursor:pointer}
+    input[type="range"]::-moz-range-thumb   {width:18px;height:18px;border-radius:50%;background:#616161;border:2px solid #fff;cursor:pointer}
+    button{background:#616161;color:#fff;border:none;border-radius:4px;padding:6px 14px;font-size:.9rem;cursor:pointer}
     button:hover{background:#424242}
     #metrics{display:flex;gap:40px;flex-wrap:wrap;justify-content:center;margin-top:10px}
-    .metric-box{background:#fff;border-radius:8px;padding:10px 20px;box-shadow:0 2px 6px rgba(0,0,0,.08);text-align:center;min-width:160px}
+    .metric-box{background:#fff;border-radius:8px;padding:10px 20px;box-shadow:0 2px 6px rgba(0,0,0,.08);text-align:center;min-width:165px}
     .metric-box h3{margin:0 0 5px 0;font-size:.9rem;color:#666}
-    .metric-box span{font-size:1.5rem;font-weight:bold}
-    .legend{display:flex;align-items:center;gap:8px;margin-top:12px}
+    .metric-box span{font-size:1.55rem;font-weight:bold}
+    .legend{display:flex;align-items:center;gap:8px;margin-top:14px}
+    svg#scatter{background:#ffffff;border-radius:8px;box-shadow:var(--shadow)}
 </style>
 </head>
 <body>
 <h1>Bank Internal Score &amp; FinScore Telco</h1>
 
 <div id="chart-container">
-    <svg id="scatter" width="800" height="600"></svg>
+    <svg id="scatter" width="820" height="620"></svg>
 
     <div id="controls">
         <label for="threshold"><strong>Combined&nbsp;Score&nbsp;≥</strong>&nbsp;<span id="thresh-val"></span></label>
@@ -45,36 +47,35 @@
 </div>
 
 <script>
-/* ---------------------------------------------------------------
-   0.  PATH TO CSV
-   ------------------------------------------------------------- */
-const CSV_PATH = "data.csv";    // change to raw GitHub URL if needed
+/* ------------------------------------------------------------------
+   CONFIG
+------------------------------------------------------------------- */
+const CSV_PATH = "data.csv";               // change to raw GitHub URL if needed
+const BASE_BENEFIT = 1275;                 // new baseline benefit
+const RADIUS = 14;                         // larger dots
+const FADE_OPACITY = 0.2;
 
-/* ---------------------------------------------------------------
-   1.  SVG & STATIC SCALES
-   ------------------------------------------------------------- */
+/* ------------------------------------------------------------------
+   SVG + STATIC SCALES
+------------------------------------------------------------------- */
 const svg  = d3.select("#scatter"),
       W    = +svg.attr("width"),
       H    = +svg.attr("height"),
-      M    = {top:40,right:40,bottom:70,left:90};
+      M    = {top:50,right:50,bottom:80,left:100};
 
-const x = d3.scaleLinear().domain([1,10]).range([M.left, W-M.right]),
-      y = d3.scaleLinear().domain([10,1]).range([M.top, H-M.bottom]);   // inverted
+const x = d3.scaleLinear().domain([1,10]).range([M.left+RADIUS, W-M.right-RADIUS]),
+      y = d3.scaleLinear().domain([10,1]).range([M.top+RADIUS, H-M.bottom-RADIUS]);
 
-/* colour buckets */
 const colour = d3.scaleThreshold()
   .domain([0.11,0.20,0.32,0.42,0.50])
   .range(["#9CCC65","#D4E157","#FFEE58","#FFCA28","#FFA726","#FF7043"]);
 
-const RADIUS = 12;                 // larger dots
-const FADE_OPACITY = 0.2;          // opacity for dots below threshold
-
-/* ---------------------------------------------------------------
-   2.  LOAD → CLEAN → AGGREGATE → DRAW
-   ------------------------------------------------------------- */
+/* ------------------------------------------------------------------
+   LOAD CSV → CLEAN → AGGREGATE → DRAW
+------------------------------------------------------------------- */
 d3.csv(CSV_PATH, d3.autoType).then(raw => {
 
-  const clean = raw.filter(r => !Object.values(r).some(v => v === "#N/A" || v === null));
+  const clean = raw.filter(r => !Object.values(r).some(v => v==="#N/A"||v===null));
 
   const data = d3.rollups(
       clean,
@@ -82,46 +83,51 @@ d3.csv(CSV_PATH, d3.autoType).then(raw => {
         telco: v[0]["FinScore Telco"],
         bank:  v[0]["Bank Internal Score"],
         comb:  v[0]["Combined Score"],
-        bad:   d3.mean(v, d=>d["Good/Bad Flag"]),
+        bad:   d3.mean(v,d=>d["Good/Bad Flag"]),
         n:     v.length
       }),
       d => `${d["FinScore Telco"]}-${d["Bank Internal Score"]}-${d["Combined Score"]}`
     ).map(d=>d[1]);
 
-  /* ------------------- axes ------------------- */
-  const ax = svg.append("g")
-    .attr("class","axes");
+  /* ---------------- axes ---------------- */
+  const ax = svg.append("g").attr("class","axes");
 
   ax.append("g")
     .attr("transform",`translate(0,${H-M.bottom})`)
     .call(d3.axisBottom(x).ticks(10))
-    .call(g => g.selectAll(".domain, .tick line").attr("stroke-width",2));
+    .call(g=>g.selectAll(".domain,.tick line").attr("stroke","#888").attr("stroke-width",2));
 
   ax.append("g")
     .attr("transform",`translate(${M.left},0)`)
     .call(d3.axisLeft(y).ticks(10))
-    .call(g => g.selectAll(".domain, .tick line").attr("stroke-width",2));
+    .call(g=>g.selectAll(".domain,.tick line").attr("stroke","#888").attr("stroke-width",2));
 
-  /* axis labels */
+  /* axis labels (shifted) */
   svg.append("text")
-      .attr("x",W/2).attr("y",H-M.bottom+45)
+      .attr("x",W/2).attr("y",H-M.bottom+55)
       .attr("text-anchor","middle")
-      .attr("font-size","14px").attr("font-weight","bold")
+      .attr("font-size","15px").attr("font-weight","bold")
       .text("FinScore Telco (1 = low, 10 = high)");
 
   svg.append("text")
       .attr("transform","rotate(-90)")
-      .attr("x",-H/2).attr("y",M.left-60)
+      .attr("x",-H/2).attr("y",M.left-70)
       .attr("text-anchor","middle")
-      .attr("font-size","14px").attr("font-weight","bold")
+      .attr("font-size","15px").attr("font-weight","bold")
       .text("Bank Internal Score (10 = best, 1 = worst)");
 
-  /* ------------------- dots & labels ------------------- */
-  const gDots = svg.append("g");
+  /* ---------------- dots & labels ---------------- */
+  const gDots = svg.append("g")
+        .attr("filter","url(#shadow)");
+
+  svg.append("defs").append("filter")
+     .attr("id","shadow")
+     .append("feDropShadow")
+       .attr("dx","1").attr("dy","1").attr("stdDeviation","1.5")
+       .attr("flood-color","#000").attr("flood-opacity",".35");
 
   gDots.selectAll("circle")
-    .data(data)
-    .join("circle")
+    .data(data).join("circle")
       .attr("cx",d=>x(d.telco))
       .attr("cy",d=>y(d.bank))
       .attr("r",RADIUS)
@@ -129,19 +135,18 @@ d3.csv(CSV_PATH, d3.autoType).then(raw => {
       .attr("stroke","#333").attr("stroke-width",0.7);
 
   gDots.selectAll("text")
-    .data(data)
-    .join("text")
+    .data(data).join("text")
       .attr("x",d=>x(d.telco))
       .attr("y",d=>y(d.bank))
       .attr("dy",".35em")
       .attr("text-anchor","middle")
-      .attr("font-size",".7rem")
+      .attr("font-size",".78rem")
       .attr("font-weight","bold")
       .attr("fill","#000")
       .attr("pointer-events","none")
       .text(d=>d3.format(".0%")(d.bad));
 
-  /* tooltip */
+  /* ---------------- tooltip ---------------- */
   const tt = d3.select("body").append("div")
         .style("position","absolute").style("pointer-events","none")
         .style("background","#fff").style("border","1px solid #ccc")
@@ -155,28 +160,26 @@ d3.csv(CSV_PATH, d3.autoType).then(raw => {
          <strong>Combined Score:</strong> ${d.comb}<br>
          <strong>Avg Default:</strong> ${(d.bad*100).toFixed(1)}%<br>
          <strong>Observations:</strong> ${d.n}`))
-    .on("mousemove",e=>tt.style("left",(e.pageX+10)+"px").style("top",(e.pageY-28)+"px"))
+    .on("mousemove",e=>tt.style("left",(e.pageX+12)+"px").style("top",(e.pageY-30)+"px"))
     .on("mouseout",()=>tt.style("opacity",0));
 
-  /* legend */
+  /* ---------------- legend ---------------- */
   const lgData=[
     ["0–10%","#9CCC65"],["11–19%","#D4E157"],["20–31%","#FFEE58"],
-    ["32–41%","#FFCA28"],["42–49%","#FFA726"],["50–100%","#FF7043"]
-  ];
+    ["32–41%","#FFCA28"],["42–49%","#FFA726"],["50–100%","#FF7043"] ];
   const lg = d3.select("#legend").html("").append("svg")
-               .attr("width",440).attr("height",40);
+               .attr("width",460).attr("height",40);
 
   lg.selectAll("g")
     .data(lgData).join("g")
-      .attr("transform",(d,i)=>`translate(${i*70},0)`)
+      .attr("transform",(d,i)=>`translate(${i*75},0)`)
     .call(g=>{
-       g.append("rect").attr("x",0).attr("y",10).attr("width",14).attr("height",14)
+       g.append("rect").attr("x",0).attr("y",12).attr("width",16).attr("height",16)
         .attr("fill",d=>d[1]).attr("stroke","#333").attr("stroke-width",.4);
-       g.append("text").attr("x",18).attr("y",22)
-        .attr("font-size",".8rem").text(d=>d[0]);
+       g.append("text").attr("x",20).attr("y",25).attr("font-size",".8rem").text(d=>d[0]);
     });
 
-  /* ------------------- slider logic ------------------- */
+  /* ---------------- slider / metrics ---------------- */
   const slider  = d3.select("#threshold"),
         threshV = d3.select("#thresh-val"),
         accSp   = d3.select("#acc-rate"),
@@ -186,7 +189,7 @@ d3.csv(CSV_PATH, d3.autoType).then(raw => {
 
   function update(th){
       threshV.text(th);
-      const show =    d => d.comb >= th,
+      const show = d => d.comb >= th,
             acc  = data.filter(show),
             nAcc = d3.sum(acc,d=>d.n),
             accR = nAcc/totalN,
@@ -194,22 +197,22 @@ d3.csv(CSV_PATH, d3.autoType).then(raw => {
 
       accSp.text((accR*100).toFixed(1)+"%");
       defSp.text((defR*100).toFixed(1)+"%");
-      benSp.text("₱"+(accR*830).toFixed(0));
+      benSp.text("₱"+(accR*BASE_BENEFIT).toFixed(0));
 
       gDots.selectAll("circle")
-        .attr("opacity",d=>show(d)?1:FADE_OPACITY);
+           .attr("opacity",d=>show(d)?1:FADE_OPACITY);
       gDots.selectAll("text")
-        .attr("opacity",d=>show(d)?1:FADE_OPACITY);
+           .attr("opacity",d=>show(d)?1:FADE_OPACITY);
   }
   slider.on("input",function(){update(+this.value);});
   update(+slider.node().value);
 
-  /* play / pause */
-  let t=null;
+  /* play/pause */
+  let timer=null;
   d3.select("#toggle").on("click",function(){
-      if(t){clearInterval(t);t=null;this.textContent="Play";return;}
+      if(timer){clearInterval(timer);timer=null;this.textContent="Play";return;}
       this.textContent="Pause";
-      t=setInterval(()=>{
+      timer=setInterval(()=>{
           let v=+slider.node().value;v=v<10?v+1:1;
           slider.node().value=v;update(v);
       },1400);
