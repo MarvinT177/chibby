@@ -1,0 +1,241 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>FinScore Telco vs Bank Internal Score</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+    body {{
+        font-family: "Helvetica Neue", Arial, sans-serif;
+        background:#f5f5f5;
+        margin:0;
+        padding:20px;
+        color:#333;
+    }}
+    h1 {{
+        text-align:center;
+        margin-bottom:10px;
+    }}
+    #chart-container {{
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+    }}
+    #controls {{
+        margin:15px 0;
+        display:flex;
+        gap:20px;
+        align-items:center;
+    }}
+    #metrics {{
+        display:flex;
+        gap:40px;
+        flex-wrap:wrap;
+        justify-content:center;
+        margin-top:10px;
+    }}
+    .metric-box {{
+        background:#fff;
+        border-radius:8px;
+        padding:10px 20px;
+        box-shadow:0 2px 6px rgba(0,0,0,0.1);
+        text-align:center;
+        min-width:160px;
+    }}
+    .metric-box h3 {{
+        margin:0 0 5px 0;
+        font-size:0.9rem;
+        color:#666;
+    }}
+    .metric-box span {{
+        font-size:1.4rem;
+        font-weight:bold;
+    }}
+    .legend {{
+        display:flex;
+        align-items:center;
+        gap:8px;
+        margin-top:10px;
+    }}
+    .legend svg {{
+        overflow:visible;
+    }}
+    .legend text {{
+        font-size:0.8rem;
+        fill:#333;
+    }}
+</style>
+</head>
+<body>
+<h1>FinScore Telco vs Bank Internal Score</h1>
+<div id="chart-container">
+    <svg id="scatter" width="850" height="650"></svg>
+    <div id="controls">
+        <label for="threshold">Combined&nbsp;Score&nbsp;≥&nbsp;<span id="thresh-val"></span></label>
+        <input type="range" id="threshold" min="1" max="10" step="1" value="1">
+        <button id="toggle">Play</button>
+    </div>
+    <div id="metrics">
+        <div class="metric-box">
+            <h3>Acceptance Rate</h3>
+            <span id="acc-rate">0%</span>
+        </div>
+        <div class="metric-box">
+            <h3>Default Rate</h3>
+            <span id="def-rate">0%</span>
+        </div>
+        <div class="metric-box">
+            <h3>Monetary benefit<br/>per application (PHP)</h3>
+            <span id="benefit">₱0</span>
+        </div>
+    </div>
+    <div class="legend" id="legend"></div>
+</div>
+
+<script>
+// ---------------- Embedded aggregated data -----------------
+const data = [{"FinScore Telco":1.0,"Bank Internal Score":1.0,"Combined Score":8.0,"good_bad_avg":0.11904761904761904,"count":42},{"FinScore Telco":1.0,"Bank Internal Score":2.0,"Combined Score":4.0,"good_bad_avg":0.35344827586206895,"count":116},{"FinScore Telco":1.0,"Bank Internal Score":3.0,"Combined Score":3.0,"good_bad_avg":0.36024844720496896,"count":161},{"FinScore Telco":1.0,"Bank Internal Score":4.0,"Combined Score":2.0,"good_bad_avg":0.5205479452054794,"count":146},{"FinScore Telco":1.0,"Bank Internal Score":5.0,"Combined Score":2.0,"good_bad_avg":0.527027027027027,"count":148},{"FinScore Telco":1.0,"Bank Internal Score":6.0,"Combined Score":2.0,"good_bad_avg":0.4767932489451477,"count":237},{"FinScore Telco":1.0,"Bank Internal Score":7.0,"Combined Score":1.0,"good_bad_avg":0.5537848605577689,"count":251},{"FinScore Telco":1.0,"Bank Internal Score":8.0,"Combined Score":1.0,"good_bad_avg":0.5519125683060109,"count":366},{"FinScore Telco":1.0,"Bank Internal Score":9.0,"Combined Score":1.0,"good_bad_avg":0.5747126436781609,"count":348},{"FinScore Telco":1.0,"Bank Internal Score":10.0,"Combined Score":1.0,"good_bad_avg":0.6276595744680851,"count":470},{"FinScore Telco":2.0,"Bank Internal Score":1.0,"Combined Score":8.0,"good_bad_avg":0.09090909090909091,"count":66},{"FinScore Telco":2.0,"Bank Internal Score":2.0,"Combined Score":5.0,"good_bad_avg":0.26548672566371684,"count":113},{"FinScore Telco":2.0,"Bank Internal Score":3.0,"Combined Score":4.0,"good_bad_avg":0.3708609271523179,"count":151},{"FinScore Telco":2.0,"Bank Internal Score":4.0,"Combined Score":3.0,"good_bad_avg":0.40559440559440557,"count":143},{"FinScore Telco":2.0,"Bank Internal Score":5.0,"Combined Score":3.0,"good_bad_avg":0.39285714285714285,"count":168},{"FinScore Telco":2.0,"Bank Internal Score":6.0,"Combined Score":3.0,"good_bad_avg":0.39920948616600793,"count":253},{"FinScore Telco":2.0,"Bank Internal Score":7.0,"Combined Score":2.0,"good_bad_avg":0.4581818181818182,"count":275},{"FinScore Telco":2.0,"Bank Internal Score":8.0,"Combined Score":2.0,"good_bad_avg":0.4634146341463415,"count":369},{"FinScore Telco":2.0,"Bank Internal Score":9.0,"Combined Score":1.0,"good_bad_avg":0.5238095238095238,"count":378},{"FinScore Telco":2.0,"Bank Internal Score":10.0,"Combined Score":1.0,"good_bad_avg":0.5753086419753086,"count":405},{"FinScore Telco":3.0,"Bank Internal Score":1.0,"Combined Score":9.0,"good_bad_avg":0.12,"count":75},{"FinScore Telco":3.0,"Bank Internal Score":2.0,"Combined Score":8.0,"good_bad_avg":0.2702702702702703,"count":111},{"FinScore Telco":3.0,"Bank Internal Score":3.0,"Combined Score":5.0,"good_bad_avg":0.32558139534883723,"count":172},{"FinScore Telco":3.0,"Bank Internal Score":4.0,"Combined Score":5.0,"good_bad_avg":0.3488372093023256,"count":172},{"FinScore Telco":3.0,"Bank Internal Score":5.0,"Combined Score":4.0,"good_bad_avg":0.3219178082191781,"count":146},{"FinScore Telco":3.0,"Bank Internal Score":6.0,"Combined Score":4.0,"good_bad_avg":0.3755868544600939,"count":213},{"FinScore Telco":3.0,"Bank Internal Score":7.0,"Combined Score":3.0,"good_bad_avg":0.4029126213592233,"count":206},{"FinScore Telco":3.0,"Bank Internal Score":8.0,"Combined Score":2.0,"good_bad_avg":0.49584487534626037,"count":361},{"FinScore Telco":3.0,"Bank Internal Score":9.0,"Combined Score":2.0,"good_bad_avg":0.5108108108108108,"count":370},{"FinScore Telco":3.0,"Bank Internal Score":10.0,"Combined Score":1.0,"good_bad_avg":0.5414507772020726,"count":386},{"FinScore Telco":4.0,"Bank Internal Score":1.0,"Combined Score":10.0,"good_bad_avg":0.10975609756097561,"count":82},{"FinScore Telco":4.0,"Bank Internal Score":2.0,"Combined Score":9.0,"good_bad_avg":0.23008849557522124,"count":113},{"FinScore Telco":4.0,"Bank Internal Score":3.0,"Combined Score":8.0,"good_bad_avg":0.2608695652173913,"count":138},{"FinScore Telco":4.0,"Bank Internal Score":4.0,"Combined Score":6.0,"good_bad_avg":0.23125,"count":160},{"FinScore Telco":4.0,"Bank Internal Score":5.0,"Combined Score":5.0,"good_bad_avg":0.3310344827586207,"count":145},{"FinScore Telco":4.0,"Bank Internal Score":6.0,"Combined Score":5.0,"good_bad_avg":0.3803418803418803,"count":234},{"FinScore Telco":4.0,"Bank Internal Score":7.0,"Combined Score":4.0,"good_bad_avg":0.39615384615384613,"count":260},{"FinScore Telco":4.0,"Bank Internal Score":8.0,"Combined Score":3.0,"good_bad_avg":0.42819148936170215,"count":376},{"FinScore Telco":4.0,"Bank Internal Score":9.0,"Combined Score":3.0,"good_bad_avg":0.453125,"count":384},{"FinScore Telco":4.0,"Bank Internal Score":10.0,"Combined Score":2.0,"good_bad_avg":0.5303030303030303,"count":396},{"FinScore Telco":5.0,"Bank Internal Score":1.0,"Combined Score":10.0,"good_bad_avg":0.06521739130434782,"count":92},{"FinScore Telco":5.0,"Bank Internal Score":2.0,"Combined Score":9.0,"good_bad_avg":0.15714285714285714,"count":140},{"FinScore Telco":5.0,"Bank Internal Score":3.0,"Combined Score":8.0,"good_bad_avg":0.22941176470588234,"count":170},{"FinScore Telco":5.0,"Bank Internal Score":4.0,"Combined Score":7.0,"good_bad_avg":0.3018867924528302,"count":159},{"FinScore Telco":5.0,"Bank Internal Score":5.0,"Combined Score":6.0,"good_bad_avg":0.3448275862068966,"count":145},{"FinScore Telco":5.0,"Bank Internal Score":6.0,"Combined Score":5.0,"good_bad_avg":0.34959349593495936,"count":246},{"FinScore Telco":5.0,"Bank Internal Score":7.0,"Combined Score":5.0,"good_bad_avg":0.4340425531914894,"count":235},{"FinScore Telco":5.0,"Bank Internal Score":8.0,"Combined Score":5.0,"good_bad_avg":0.4077669902912621,"count":309},{"FinScore Telco":5.0,"Bank Internal Score":9.0,"Combined Score":4.0,"good_bad_avg":0.4298780487804878,"count":328},{"FinScore Telco":5.0,"Bank Internal Score":10.0,"Combined Score":3.0,"good_bad_avg":0.5163934426229508,"count":366},{"FinScore Telco":6.0,"Bank Internal Score":1.0,"Combined Score":10.0,"good_bad_avg":0.06666666666666667,"count":105},{"FinScore Telco":6.0,"Bank Internal Score":2.0,"Combined Score":10.0,"good_bad_avg":0.15753424657534246,"count":146},{"FinScore Telco":6.0,"Bank Internal Score":3.0,"Combined Score":9.0,"good_bad_avg":0.21341463414634146,"count":164},{"FinScore Telco":6.0,"Bank Internal Score":4.0,"Combined Score":8.0,"good_bad_avg":0.24550898203592814,"count":167},{"FinScore Telco":6.0,"Bank Internal Score":5.0,"Combined Score":7.0,"good_bad_avg":0.3333333333333333,"count":150},{"FinScore Telco":6.0,"Bank Internal Score":6.0,"Combined Score":6.0,"good_bad_avg":0.31365313653136534,"count":271},{"FinScore Telco":6.0,"Bank Internal Score":7.0,"Combined Score":6.0,"good_bad_avg":0.30701754385964913,"count":228},{"FinScore Telco":6.0,"Bank Internal Score":8.0,"Combined Score":6.0,"good_bad_avg":0.33972602739726027,"count":365},{"FinScore Telco":6.0,"Bank Internal Score":9.0,"Combined Score":5.0,"good_bad_avg":0.3575757575757576,"count":330},{"FinScore Telco":6.0,"Bank Internal Score":10.0,"Combined Score":3.0,"good_bad_avg":0.4371584699453552,"count":366},{"FinScore Telco":7.0,"Bank Internal Score":1.0,"Combined Score":10.0,"good_bad_avg":0.10576923076923077,"count":104},{"FinScore Telco":7.0,"Bank Internal Score":2.0,"Combined Score":10.0,"good_bad_avg":0.14906832298136646,"count":161},{"FinScore Telco":7.0,"Bank Internal Score":3.0,"Combined Score":9.0,"good_bad_avg":0.24285714285714285,"count":140},{"FinScore Telco":7.0,"Bank Internal Score":4.0,"Combined Score":8.0,"good_bad_avg":0.20496894409937888,"count":161},{"FinScore Telco":7.0,"Bank Internal Score":5.0,"Combined Score":7.0,"good_bad_avg":0.3263888888888889,"count":144},{"FinScore Telco":7.0,"Bank Internal Score":6.0,"Combined Score":7.0,"good_bad_avg":0.23770491803278687,"count":244},{"FinScore Telco":7.0,"Bank Internal Score":7.0,"Combined Score":7.0,"good_bad_avg":0.3070539419087137,"count":241},{"FinScore Telco":7.0,"Bank Internal Score":8.0,"Combined Score":6.0,"good_bad_avg":0.3031161473087819,"count":353},{"FinScore Telco":7.0,"Bank Internal Score":9.0,"Combined Score":6.0,"good_bad_avg":0.37537537537537535,"count":333},{"FinScore Telco":7.0,"Bank Internal Score":10.0,"Combined Score":4.0,"good_bad_avg":0.43804034582132567,"count":347},{"FinScore Telco":8.0,"Bank Internal Score":1.0,"Combined Score":10.0,"good_bad_avg":0.06870229007633588,"count":131},{"FinScore Telco":8.0,"Bank Internal Score":2.0,"Combined Score":10.0,"good_bad_avg":0.10365853658536585,"count":164},{"FinScore Telco":8.0,"Bank Internal Score":3.0,"Combined Score":9.0,"good_bad_avg":0.17318435754189945,"count":179},{"FinScore Telco":8.0,"Bank Internal Score":4.0,"Combined Score":9.0,"good_bad_avg":0.20441988950276244,"count":181},{"FinScore Telco":8.0,"Bank Internal Score":5.0,"Combined Score":8.0,"good_bad_avg":0.23214285714285715,"count":168},{"FinScore Telco":8.0,"Bank Internal Score":6.0,"Combined Score":7.0,"good_bad_avg":0.3039647577092511,"count":227},{"FinScore Telco":8.0,"Bank Internal Score":7.0,"Combined Score":7.0,"good_bad_avg":0.2823529411764706,"count":255},{"FinScore Telco":8.0,"Bank Internal Score":8.0,"Combined Score":7.0,"good_bad_avg":0.3292307692307692,"count":325},{"FinScore Telco":8.0,"Bank Internal Score":9.0,"Combined Score":6.0,"good_bad_avg":0.3432343234323432,"count":303},{"FinScore Telco":8.0,"Bank Internal Score":10.0,"Combined Score":5.0,"good_bad_avg":0.38992042440318303,"count":377},{"FinScore Telco":9.0,"Bank Internal Score":1.0,"Combined Score":10.0,"good_bad_avg":0.04216867469879518,"count":166},{"FinScore Telco":9.0,"Bank Internal Score":2.0,"Combined Score":10.0,"good_bad_avg":0.10810810810810811,"count":148},{"FinScore Telco":9.0,"Bank Internal Score":3.0,"Combined Score":10.0,"good_bad_avg":0.20689655172413793,"count":174},{"FinScore Telco":9.0,"Bank Internal Score":4.0,"Combined Score":9.0,"good_bad_avg":0.1443850267379679,"count":187},{"FinScore Telco":9.0,"Bank Internal Score":5.0,"Combined Score":9.0,"good_bad_avg":0.20915032679738563,"count":153},{"FinScore Telco":9.0,"Bank Internal Score":6.0,"Combined Score":8.0,"good_bad_avg":0.2612244897959184,"count":245},{"FinScore Telco":9.0,"Bank Internal Score":7.0,"Combined Score":8.0,"good_bad_avg":0.2328767123287671,"count":219},{"FinScore Telco":9.0,"Bank Internal Score":8.0,"Combined Score":7.0,"good_bad_avg":0.2631578947368421,"count":304},{"FinScore Telco":9.0,"Bank Internal Score":9.0,"Combined Score":7.0,"good_bad_avg":0.2949852507374631,"count":339},{"FinScore Telco":9.0,"Bank Internal Score":10.0,"Combined Score":6.0,"good_bad_avg":0.37537537537537535,"count":333},{"FinScore Telco":10.0,"Bank Internal Score":1.0,"Combined Score":10.0,"good_bad_avg":0.03488372093023256,"count":172},{"FinScore Telco":10.0,"Bank Internal Score":2.0,"Combined Score":10.0,"good_bad_avg":0.09836065573770492,"count":183},{"FinScore Telco":10.0,"Bank Internal Score":3.0,"Combined Score":10.0,"good_bad_avg":0.1657142857142857,"count":175},{"FinScore Telco":10.0,"Bank Internal Score":4.0,"Combined Score":9.0,"good_bad_avg":0.13131313131313133,"count":198},{"FinScore Telco":10.0,"Bank Internal Score":5.0,"Combined Score":9.0,"good_bad_avg":0.14634146341463414,"count":164},{"FinScore Telco":10.0,"Bank Internal Score":6.0,"Combined Score":9.0,"good_bad_avg":0.1932367149758454,"count":207},{"FinScore Telco":10.0,"Bank Internal Score":7.0,"Combined Score":8.0,"good_bad_avg":0.2,"count":220},{"FinScore Telco":10.0,"Bank Internal Score":8.0,"Combined Score":8.0,"good_bad_avg":0.23673469387755103,"count":245},{"FinScore Telco":10.0,"Bank Internal Score":9.0,"Combined Score":8.0,"good_bad_avg":0.24187725631768953,"count":277},{"FinScore Telco":10.0,"Bank Internal Score":10.0,"Combined Score":7.0,"good_bad_avg":0.2861356932153392,"count":339}];
+// -----------------------------------------------------------
+
+// SVG setup
+const svg = d3.select("#scatter"),
+      width = +svg.attr("width"),
+      height = +svg.attr("height"),
+      margin = {{top:40,right:40,bottom:60,left:60}};
+
+// Scales
+const x = d3.scaleLinear().domain([1,10]).range([margin.left, width - margin.right]),
+      y = d3.scaleLinear().domain([1,10]).range([margin.top, height - margin.bottom]),
+      r_constant = 10,
+      color = d3.scaleThreshold()
+                .domain([0.11,0.20,0.32,0.42,0.50])
+                .range(["#9CCC65","#D4E157","#FFEE58","#FFCA28","#FFA726","#FF7043"]);
+
+// Axes
+svg.append("g")
+    .attr("transform", `translate(0,${{height - margin.bottom}})`)
+    .call(d3.axisBottom(x).ticks(10))
+  .append("text")
+    .attr("x", width/2).attr("y", 40)
+    .attr("fill", "#000").attr("font-weight","bold")
+    .attr("text-anchor","middle")
+    .text("FinScore Telco (1 = low, 10 = high)");
+
+svg.append("g")
+    .attr("transform", `translate(${{margin.left}},0)`)
+    .call(d3.axisLeft(y).ticks(10))
+  .append("text")
+    .attr("transform","rotate(-90)")
+    .attr("x", -height/2).attr("y", -45)
+    .attr("fill","#000").attr("text-anchor","middle")
+    .attr("font-weight","bold")
+    .text("Bank Internal Score (1 = best, 10 = worst)");
+
+// Points group
+const gDots = svg.append("g").attr("stroke","#333").attr("stroke-width",0.6);
+
+gDots.selectAll("circle")
+  .data(data)
+  .join("circle")
+    .attr("cx", d => x(d["FinScore Telco"]))
+    .attr("cy", d => y(d["Bank Internal Score"]))
+    .attr("r", r_constant)
+    .attr("fill", d => color(d.good_bad_avg))
+    .attr("opacity",0.9);
+
+gDots.selectAll("text")
+  .data(data)
+  .join("text")
+    .attr("x", d => x(d["FinScore Telco"]))
+    .attr("y", d => y(d["Bank Internal Score"]))
+    .text(d => d3.format(".0%")(d.good_bad_avg))
+    .attr("font-size","0.6rem")
+    .attr("font-weight","bold")
+    .attr("text-anchor","middle")
+    .attr("dy",".35em")
+    .attr("pointer-events","none")
+    .attr("fill","black");
+
+// Tooltip
+const tooltip = d3.select("body").append("div")
+      .style("position","absolute")
+      .style("pointer-events","none")
+      .style("background","#fff")
+      .style("border","1px solid #ccc")
+      .style("padding","6px 10px")
+      .style("border-radius","4px")
+      .style("font-size","0.8rem")
+      .style("opacity",0);
+
+gDots.selectAll("circle")
+  .on("mouseover", (event,d) => {{
+    tooltip.style("opacity",1).html(
+        `<strong>FinScore Telco:</strong> ${{d["FinScore Telco"]}}<br>
+         <strong>Bank Score:</strong> ${{d["Bank Internal Score"]}}<br>
+         <strong>Combined Score:</strong> ${{d["Combined Score"]}}<br>
+         <strong>Avg Default:</strong> ${(d.good_bad_avg*100).toFixed(1)}%<br>
+         <strong>Observations:</strong> ${{d.count}}`
+    );
+  }})
+  .on("mousemove", event => tooltip.style("left",(event.pageX+10)+"px").style("top",(event.pageY-28)+"px"))
+  .on("mouseout", () => tooltip.style("opacity",0));
+
+// Legend
+const legendData = [
+  ["0-10%", "#9CCC65"],
+  ["11-19%", "#D4E157"],
+  ["20-31%", "#FFEE58"],
+  ["32-41%", "#FFCA28"],
+  ["42-49%", "#FFA726"],
+  ["50-100%", "#FF7043"]
+];
+
+const legend = d3.select("#legend").html("");
+const legSvg = legend.append("svg").attr("width",520).attr("height",34);
+
+legendData.forEach((d,i) => {{
+    const g = legSvg.append("g").attr("transform",`translate(${{i*85}},0)`);
+    g.append("rect").attr("x",0).attr("y",10).attr("width",14).attr("height",14).attr("fill",d[1]).attr("stroke","#333").attr("stroke-width",0.3);
+    g.append("text").attr("x",18).attr("y",21).attr("font-size","0.8rem").text(d[0]);
+}});
+
+// Slider metrics
+const slider = d3.select("#threshold"),
+      threshVal = d3.select("#thresh-val"),
+      accSpan = d3.select("#acc-rate"),
+      defSpan = d3.select("#def-rate"),
+      benSpan = d3.select("#benefit"),
+      totalObs = d3.sum(data, d => d.count);
+
+function updateMetrics(th){{
+    threshVal.text(th);
+    const accepted = data.filter(d => d["Combined Score"] >= th),
+          acceptedObs = d3.sum(accepted, d=>d.count),
+          acceptanceRate = acceptedObs / totalObs,
+          defaultNumerator = d3.sum(accepted, d=>d.count * d.good_bad_avg),
+          defaultRate = acceptedObs ? (defaultNumerator/acceptedObs) : 0;
+    accSpan.text((acceptanceRate*100).toFixed(1)+"%");
+    defSpan.text((defaultRate*100).toFixed(1)+"%");
+    benSpan.text("₱"+(acceptanceRate*830).toFixed(0));
+}}
+slider.on("input", function(){{ updateMetrics(+this.value); }});
+updateMetrics(+slider.node().value);
+
+// Play/pause
+const button = d3.select("#toggle");
+let interval = null;
+button.on("click", () => {{
+    if(interval){{
+        clearInterval(interval); interval=null; button.text("Play");
+    }} else {{
+        interval=setInterval(() => {{
+            let v=+slider.node().value; v = v<10 ? v+1 : 1;
+            slider.node().value = v; updateMetrics(v);
+        }},1500);
+        button.text("Pause");
+    }}
+}});
+</script>
+</body>
+</html>
