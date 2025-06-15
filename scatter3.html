@@ -214,7 +214,7 @@ d3.csv(CSV_PATH, d3.autoType).then(raw => {
     .on("mouseout",()=>tt.style("opacity",0));
 
   /* -------- legend -------- */
-  const lgData=[["0–10%","#9CCC65"],["11–19%","#D4E157"],["20–31%","#FFEE58"],
+  const lgData=[["0–12%","#9CCC65"],["13–19%","#D4E157"],["20–31%","#FFEE58"],
                 ["32–41%","#FFCA28"],["42–49%","#FFA726"],["50–100%","#FF7043"]];
   const lg=d3.select("#legend").html("").append("svg").attr("width",460).attr("height",40);
   lg.selectAll("g").data(lgData).join("g")
