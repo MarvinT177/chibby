@@ -45,6 +45,7 @@
     </div>
 
     <div id="metrics">
+        <!-- Approval -->
         <div class="metric-box">
             <h3>Combined Approval Rate</h3><span id="acc-rate">0%</span>
             <div class="sub-metrics">
@@ -52,18 +53,18 @@
                 <div class="sub-box"><h4>Telco Only</h4><span id="acc-telco">0%</span></div>
             </div>
         </div>
-
+        <!-- Default -->
         <div class="metric-box">
             <h3>Combined Default Rate</h3><span id="def-rate">0%</span>
             <div class="sub-metrics">
                 <div class="sub-box"><h4>Bank Only</h4><span id="def-bank">0%</span></div>
                 <div class="sub-box"><h4>Telco Only</h4><span id="def-telco">0%</span></div>
             </div>
-            <div style="margin-top:6px;font-size:.8rem;color:#555">Target % 
-                <input id="target-def" type="number" min="0" max="100" step="0.1" placeholder=" ">
+            <div style="margin-top:6px;font-size:.8rem;color:#555">
+                Target % <input id="target-def" type="number" min="0" max="100" step="0.1" placeholder="">
             </div>
         </div>
-
+        <!-- Peso -->
         <div class="metric-box">
             <h3>Peso Benefit</h3>
             <div class="sub-metrics" style="gap:10px">
@@ -72,7 +73,7 @@
                 <div class="sub-box"><h4>Bank Only<br>Avg / App</h4><span id="benefit-app-bank">₱0</span></div>
             </div>
         </div>
-
+        <!-- Thin-file -->
         <div class="metric-box">
             <h3>Thin-File Approvals Gained</h3>
             <span id="thin-count" class="thin-num">0</span>
@@ -89,7 +90,6 @@
 <script>
 const REV_PER_LOAN=2500, LGD_PER_LOAN=6500, CSV_PATH="data.csv", RADIUS=14, FADE=0.2;
 
-/* Scales */
 const svg=d3.select("#scatter"),W=+svg.attr("width"),H=+svg.attr("height"),
       M={top:50,right:50,bottom:80,left:100},
       x=d3.scaleLinear().domain([1,10]).range([M.left+RADIUS,W-M.right-RADIUS]),
@@ -104,14 +104,68 @@ d3.csv(CSV_PATH,d3.autoType).then(raw=>{
 
   const totalApps=d3.sum(data,d=>d.n);
 
-  /* ---------- (Axes, dots, tooltip code same as last version) ---------- */
-  /* (omitted here for brevity—unchanged from previous answer) */
-  /* -------------------------------------------------------------------- */
+  /* Axes */
+  svg.append("g").attr("transform",`translate(0,${H-M.bottom})`)
+      .call(d3.axisBottom(x).ticks(10))
+      .call(g=>g.selectAll(".domain,.tick line").attr("stroke","#7f7f7f").attr("stroke-width",2));
+  svg.append("g").attr("transform",`translate(${M.left},0)`)
+      .call(d3.axisLeft(y).ticks(10))
+      .call(g=>g.selectAll(".domain,.tick line").attr("stroke","#7f7f7f").attr("stroke-width",2));
+  svg.append("text").attr("x",W/2).attr("y",H-M.bottom+55).attr("text-anchor","middle")
+      .attr("font-size","18px").attr("font-weight","bold").text("FinScore Telco Score");
+  svg.append("text").attr("transform","rotate(-90)").attr("x",-H/2).attr("y",M.left-70)
+      .attr("text-anchor","middle").attr("font-size","18px").attr("font-weight","bold").text("Bank Internal Score");
 
-  /* Stats helper */
+  /* Filters & dots */
+  const defs=svg.append("defs");
+  defs.append("filter").attr("id","drop").append("feDropShadow")
+        .attr("dx","1").attr("dy","1").attr("stdDeviation","1.5")
+        .attr("flood-color","#000").attr("flood-opacity",".35");
+  defs.append("filter").attr("id","inner").html('<feGaussianBlur stdDeviation="2" result="b"/><feComposite operator="over" in2="b"/>');
+
+  const gDots=svg.append("g").attr("filter","url(#drop)");
+  gDots.selectAll("circle.main").data(data).join("circle")
+        .attr("class","main").attr("cx",d=>x(d.telco)).attr("cy",d=>y(d.bank))
+        .attr("r",RADIUS).attr("fill",d=>colour(d.bad))
+        .attr("filter","url(#inner)").attr("stroke","#333").attr("stroke-width",0.6);
+  gDots.selectAll("circle.hl").data(data).join("circle")
+        .attr("class","hl").attr("cx",d=>x(d.telco)-RADIUS/3).attr("cy",d=>y(d.bank)-RADIUS/3)
+        .attr("r",RADIUS*0.4).attr("fill","#fff").attr("opacity",0.18).attr("pointer-events","none");
+  gDots.selectAll("text").data(data).join("text")
+        .attr("x",d=>x(d.telco)).attr("y",d=>y(d.bank)).attr("dy",".35em")
+        .attr("text-anchor","middle").attr("font-size",".78rem").attr("font-weight","bold")
+        .attr("fill","#000").attr("pointer-events","none").text(d=>d3.format(".0%")(d.bad));
+
+  /* Tooltip */
+  const tip=d3.select("body").append("div").style("position","absolute").style("pointer-events","none")
+        .style("background","#fff").style("border","1px solid #ccc").style("padding","6px 10px")
+        .style("border-radius","6px").style("box-shadow","var(--shadow-sm)").style("font-size",".8rem").style("opacity",0);
+  gDots.selectAll("circle.main").on("mouseover",(e,d)=>tip.style("opacity",1).html(
+      `<strong>FinScore Telco:</strong> ${d.telco}<br>
+       <strong>Bank Score:</strong> ${d.bank}<br>
+       <strong>Combined Score:</strong> ${d.comb}<br>
+       <strong>Avg Default:</strong> ${(d.bad*100).toFixed(1)}%<br>
+       <strong>Observations:</strong> ${d.n}`))
+    .on("mousemove",e=>tip.style("left",(e.pageX+12)+"px").style("top",(e.pageY-30)+"px"))
+    .on("mouseout",()=>tip.style("opacity",0));
+
+  /* Stat helper */
   const stats=f=>{const s=data.filter(f),n=d3.sum(s,d=>d.n);return {acc:n/totalApps,pd:n?d3.sum(s,d=>d.n*d.bad)/n:0,n};};
 
-  /* ROI curve setup (same as before, omitted) */
+  /* ROI curve */
+  const roi=d3.range(1,11).map(t=>{const s=stats(d=>d.comb>=t);return {t,net:(REV_PER_LOAN-(s.pd*LGD_PER_LOAN))*s.acc};}),
+        peak=roi.reduce((a,b)=>b.net>a.net?b:a),
+        rcW=360,rcH=120,rcM=30,
+        rx=d3.scaleLinear().domain([1,10]).range([0,rcW-rcM]),
+        ry=d3.scaleLinear().domain([0,d3.max(roi,d=>d.net)]).nice().range([rcH-rcM,0]);
+  const rSvg=d3.select("#roi-chart").append("svg").attr("width",rcW).attr("height",rcH);
+  rSvg.append("path").datum(roi).attr("fill","none").attr("stroke","#1976d2").attr("stroke-width",2)
+      .attr("d",d3.line().x(d=>rx(d.t)).y(d=>ry(d.net)));
+  rSvg.append("circle").attr("cx",rx(peak.t)).attr("cy",ry(peak.net)).attr("r",4).attr("fill","#1976d2");
+  rSvg.append("text").attr("x",rx(peak.t)).attr("y",ry(peak.net)+20)
+      .attr("text-anchor","middle").attr("font-size",".75rem")
+      .text(`Peak ₱${peak.net.toFixed(0)} at ≥${peak.t}`);
+  rSvg.append("circle").attr("id","roi-current").attr("r",4).attr("fill","#d32f2f");
 
   /* DOM refs */
   const slider=d3.select("#threshold"),threshV=d3.select("#thresh-val"),
@@ -132,8 +186,7 @@ d3.csv(CSV_PATH,d3.autoType).then(raw=>{
             netApp=netLoan*sComb.acc,
             netAppBank=(REV_PER_LOAN-(sBank.pd*LGD_PER_LOAN))*sBank.acc;
 
-      accSp.text((sComb.acc*100).toFixed(1)+"%");
-      defSp.text((sComb.pd*100).toFixed(1)+"%");
+      accSp.text((sComb.acc*100).toFixed(1)+"%"); defSp.text((sComb.pd*100).toFixed(1)+"%");
       accBankSp.text((sBank.acc*100).toFixed(1)+"%"); defBankSp.text((sBank.pd*100).toFixed(1)+"%");
       accTelSp.text((sTel.acc*100).toFixed(1)+"%");  defTelSp.text((sTel.pd*100).toFixed(1)+"%");
       benLoanSp.text("₱"+netLoan.toFixed(0)); benAppSp.text("₱"+netApp.toFixed(0)); benAppBankSp.text("₱"+netAppBank.toFixed(0));
@@ -147,7 +200,7 @@ d3.csv(CSV_PATH,d3.autoType).then(raw=>{
       rSvg.select("#roi-current").attr("cx",rx(t)).attr("cy",ry(netApp));
   }
 
-  /* ---------- slider & play/pause events ---------- */
+  /* Slider & play/pause */
   slider.on("input",function(){update(+this.value);});
   update(1);
 
@@ -158,17 +211,16 @@ d3.csv(CSV_PATH,d3.autoType).then(raw=>{
       timer=setInterval(()=>{let v=+slider.node().value;v=v<10?v+1:1;slider.node().value=v;update(v);},1500);
   });
 
-  /* ---------- Target default-rate box ---------- */
+  /* Target default-rate logic */
   targetBox.on("change blur",function(){
-      const val=+this.value;
-      if(!val && val!==0) return;     // blank -> ignore
-      const target=val/100;
+      const v=parseFloat(this.value);
+      if(isNaN(v)){this.value="";return;}          // blank input, ignore
+      const target=v/100;
 
-      // find threshold giving pd <= target and closest
       let best=1, bestPd=stats(d=>d.comb>=1).pd;
       d3.range(1,11).forEach(t=>{
-          const pd=stats(d=>d.comb>=t).pd;
-          if(pd<=target && (target-pd)<=(target-bestPd)){best=t;bestPd=pd;}
+         const pd=stats(d=>d.comb>=t).pd;
+         if(pd<=target && target-pd<target-bestPd){best=t;bestPd=pd;}
       });
       slider.node().value=best;
       update(best);
@@ -177,6 +229,7 @@ d3.csv(CSV_PATH,d3.autoType).then(raw=>{
 </script>
 </body>
 </html>
+
 
 
 
