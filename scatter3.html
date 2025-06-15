@@ -45,7 +45,6 @@
     </div>
 
     <div id="metrics">
-        <!-- Approval -->
         <div class="metric-box">
             <h3>Combined Approval Rate</h3><span id="acc-rate">0%</span>
             <div class="sub-metrics">
@@ -53,7 +52,7 @@
                 <div class="sub-box"><h4>Telco Only</h4><span id="acc-telco">0%</span></div>
             </div>
         </div>
-        <!-- Default -->
+
         <div class="metric-box">
             <h3>Combined Default Rate</h3><span id="def-rate">0%</span>
             <div class="sub-metrics">
@@ -64,7 +63,7 @@
                 Target % <input id="target-def" type="number" min="0" max="100" step="0.1" placeholder="">
             </div>
         </div>
-        <!-- Peso -->
+
         <div class="metric-box">
             <h3>Peso Benefit</h3>
             <div class="sub-metrics" style="gap:10px">
@@ -73,7 +72,7 @@
                 <div class="sub-box"><h4>Bank Only<br>Avg / App</h4><span id="benefit-app-bank">₱0</span></div>
             </div>
         </div>
-        <!-- Thin-file -->
+
         <div class="metric-box">
             <h3>Thin-File Approvals Gained</h3>
             <span id="thin-count" class="thin-num">0</span>
@@ -88,7 +87,7 @@
 </div>
 
 <script>
-const REV_PER_LOAN=2500, LGD_PER_LOAN=6500, CSV_PATH="data.csv", RADIUS=14, FADE=0.2;
+const REV_PER_LOAN=2500, LGD_PER_LOAN=6500, CSV_PATH="data.csv", RADIUS=14, FADE=0.2, BASE_BANK_ACC=0.70;
 
 const svg=d3.select("#scatter"),W=+svg.attr("width"),H=+svg.attr("height"),
       M={top:50,right:50,bottom:80,left:100},
@@ -102,7 +101,13 @@ d3.csv(CSV_PATH,d3.autoType).then(raw=>{
       v=>({telco:v[0]["FinScore Telco"],bank:v[0]["Bank Internal Score"],comb:v[0]["Combined Score"],bad:d3.mean(v,d=>d["Good/Bad Flag"]),n:v.length}),
       d=>`${d["FinScore Telco"]}-${d["Bank Internal Score"]}-${d["Combined Score"]}`).map(d=>d[1]);
 
-  const totalApps=d3.sum(data,d=>d.n);
+  /* ---- scale denominator so BANK-ONLY approval at t=1 = 70 % ---- */
+  const bookedRows=d3.sum(data,d=>d.n);
+  const totalApps = bookedRows / BASE_BANK_ACC;        // 70 % baseline
+
+  /* ----- everything else identical to the previous file ----- */
+  /* (axes, dots, tooltip, ROI curve, metrics update, goal-seek) */
+  /* For brevity, code is unchanged except that stats() now uses totalApps */
 
   /* Axes */
   svg.append("g").attr("transform",`translate(0,${H-M.bottom})`)
@@ -121,7 +126,8 @@ d3.csv(CSV_PATH,d3.autoType).then(raw=>{
   defs.append("filter").attr("id","drop").append("feDropShadow")
         .attr("dx","1").attr("dy","1").attr("stdDeviation","1.5")
         .attr("flood-color","#000").attr("flood-opacity",".35");
-  defs.append("filter").attr("id","inner").html('<feGaussianBlur stdDeviation="2" result="b"/><feComposite operator="over" in2="b"/>');
+  defs.append("filter").attr("id","inner")
+        .html('<feGaussianBlur stdDeviation="2" result="b"/><feComposite operator="over" in2="b"/>');
 
   const gDots=svg.append("g").attr("filter","url(#drop)");
   gDots.selectAll("circle.main").data(data).join("circle")
@@ -149,14 +155,13 @@ d3.csv(CSV_PATH,d3.autoType).then(raw=>{
     .on("mousemove",e=>tip.style("left",(e.pageX+12)+"px").style("top",(e.pageY-30)+"px"))
     .on("mouseout",()=>tip.style("opacity",0));
 
-  /* Stat helper */
+  /* Helper */
   const stats=f=>{const s=data.filter(f),n=d3.sum(s,d=>d.n);return {acc:n/totalApps,pd:n?d3.sum(s,d=>d.n*d.bad)/n:0,n};};
 
-  /* ROI curve */
+  /* ROI */
   const roi=d3.range(1,11).map(t=>{const s=stats(d=>d.comb>=t);return {t,net:(REV_PER_LOAN-(s.pd*LGD_PER_LOAN))*s.acc};}),
         peak=roi.reduce((a,b)=>b.net>a.net?b:a),
-        rcW=360,rcH=120,rcM=30,
-        rx=d3.scaleLinear().domain([1,10]).range([0,rcW-rcM]),
+        rcW=360,rcH=120,rcM=30,rx=d3.scaleLinear().domain([1,10]).range([0,rcW-rcM]),
         ry=d3.scaleLinear().domain([0,d3.max(roi,d=>d.net)]).nice().range([rcH-rcM,0]);
   const rSvg=d3.select("#roi-chart").append("svg").attr("width",rcW).attr("height",rcH);
   rSvg.append("path").datum(roi).attr("fill","none").attr("stroke","#1976d2").attr("stroke-width",2)
@@ -177,6 +182,7 @@ d3.csv(CSV_PATH,d3.autoType).then(raw=>{
 
   function update(t){
       threshV.text(t);
+
       const fComb=d=>d.comb>=t, fTel=d=>d.telco>=t, fBank=d=>d.bank<=11-t;
       const sComb=stats(fComb), sBank=stats(fBank), sTel=stats(fTel);
 
@@ -184,8 +190,7 @@ d3.csv(CSV_PATH,d3.autoType).then(raw=>{
             netApp=netLoan*sComb.acc,
             netAppBank=(REV_PER_LOAN-(sBank.pd*LGD_PER_LOAN))*sBank.acc;
 
-      accSp.text((sComb.acc*100).toFixed(1)+"%");
-      defSp.text((sComb.pd*100).toFixed(1)+"%");
+      accSp.text((sComb.acc*100).toFixed(1)+"%"); defSp.text((sComb.pd*100).toFixed(1)+"%");
       accBankSp.text((sBank.acc*100).toFixed(1)+"%"); defBankSp.text((sBank.pd*100).toFixed(1)+"%");
       accTelSp.text((sTel.acc*100).toFixed(1)+"%");  defTelSp.text((sTel.pd*100).toFixed(1)+"%");
       benLoanSp.text("₱"+netLoan.toFixed(0)); benAppSp.text("₱"+netApp.toFixed(0)); benAppBankSp.text("₱"+netAppBank.toFixed(0));
@@ -199,9 +204,8 @@ d3.csv(CSV_PATH,d3.autoType).then(raw=>{
       rSvg.select("#roi-current").attr("cx",rx(t)).attr("cy",ry(netApp));
   }
 
-  /* Slider events */
   slider.on("input",function(){update(+this.value);});
-  update(1);
+  update(1);   // shows Bank-only ≈ 70 % at start
 
   /* play/pause */
   let timer=null;
@@ -211,24 +215,23 @@ d3.csv(CSV_PATH,d3.autoType).then(raw=>{
       timer=setInterval(()=>{let v=+slider.node().value;v=v<10?v+1:1;slider.node().value=v;update(v);},1500);
   });
 
-  /* ---------- Target default-rate logic (nearest match) ---------- */
+  /* Target default-rate goal-seek */
   targetBox.on("change blur",function(){
       const v=parseFloat(this.value);
-      if(isNaN(v)){this.value="";return;}        // blank -> ignore
+      if(isNaN(v)){this.value="";return;}
       const target=v/100;
-
       let best=1, bestPd=stats(d=>d.comb>=1).pd;
       d3.range(1,11).forEach(t=>{
           const pd=stats(d=>d.comb>=t).pd;
           if(Math.abs(pd-target) < Math.abs(bestPd-target)){best=t; bestPd=pd;}
       });
-      slider.node().value=best;
-      update(best);
+      slider.node().value=best; update(best);
   });
 });
 </script>
 </body>
 </html>
+
 
 
 
