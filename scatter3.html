@@ -109,7 +109,7 @@ const x = d3.scaleLinear().domain([1,10]).range([M.left+RADIUS, W-M.right-RADIUS
 
 const colour = d3.scaleThreshold()
   .domain([0.12,0.20,0.32,0.42,0.50])
-  .range(["#9CCC65","#D4E157","#FFEE58","#FFCA28","#FFA726","#FF7043"]);
+  .range(["#388E3C","#7CB342","#FFEE58","#FFCA28","#FFA726","#FF7043"]);
 
 /* -------- data -------- */
 d3.csv(CSV_PATH, d3.autoType).then(raw => {
@@ -214,7 +214,7 @@ d3.csv(CSV_PATH, d3.autoType).then(raw => {
     .on("mouseout",()=>tt.style("opacity",0));
 
   /* -------- legend -------- */
-  const lgData=[["0–12%","#9CCC65"],["13–19%","#D4E157"],["20–31%","#FFEE58"],
+  const lgData=[["0–12%","#388E3C"],["13–19%","#7CB342"],["20–31%","#FFEE58"],
                 ["32–41%","#FFCA28"],["42–49%","#FFA726"],["50–100%","#FF7043"]];
   const lg=d3.select("#legend").html("").append("svg").attr("width",460).attr("height",40);
   lg.selectAll("g").data(lgData).join("g")
