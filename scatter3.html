@@ -6,32 +6,48 @@
 <title>Bank Internal Score &amp; FinScore Telco</title>
 <script src="d3.v7.min.js"></script>
 <style>
-    :root{--card-bg:#fafafa;--shadow:0 1px 3px rgba(0,0,0,.05)}
+    :root{
+        --card-bg:#ffffff;
+        --shadow-lg:0 6px 14px rgba(0,0,0,.12);
+        --shadow-sm:0 2px 6px rgba(0,0,0,.08);
+        --inset:inset 0 1px 2px rgba(255,255,255,.6);
+    }
     body{font-family:"Helvetica Neue",Arial,sans-serif;background:#f5f5f5;margin:0;padding:20px;color:#333}
     h1{text-align:center;margin:0 0 15px;font-size:1.45rem}
     #chart-container{display:flex;flex-direction:column;align-items:center}
+
     /* Slider panel */
     #controls{margin:18px 0;display:flex;gap:18px;align-items:center;
-              background:var(--card-bg);border:1px solid #ddd;border-radius:8px;padding:10px 16px;box-shadow:var(--shadow)}
-    input[type="range"]{-webkit-appearance:none;width:240px;height:6px;background:#e0e0e0;border-radius:3px;outline:none}
-    input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#616161;border:2px solid #fff;cursor:pointer}
-    input[type="range"]::-moz-range-thumb   {width:18px;height:18px;border-radius:50%;background:#616161;border:2px solid #fff;cursor:pointer}
-    button{background:#616161;color:#fff;border:none;border-radius:4px;padding:6px 14px;font-size:.9rem;cursor:pointer}
+              background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow-sm),var(--inset);
+              padding:10px 18px;border:1px solid #d5d5d5}
+    input[type="range"]{-webkit-appearance:none;width:240px;height:6px;background:#d0d0d0;border-radius:3px;outline:none}
+    input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#616161;border:2px solid #fff;cursor:pointer;box-shadow:var(--shadow-sm)}
+    input[type="range"]::-moz-range-thumb   {width:18px;height:18px;border-radius:50%;background:#616161;border:2px solid #fff;cursor:pointer;box-shadow:var(--shadow-sm)}
+    button{background:#616161;color:#fff;border:none;border-radius:6px;padding:6px 16px;font-size:.9rem;cursor:pointer;box-shadow:var(--shadow-sm)}
     button:hover{background:#424242}
-    /* Metrics */
+
+    /* Metric / legend cards */
     #metrics{display:flex;gap:40px;flex-wrap:wrap;justify-content:center;margin-top:10px}
-    .metric-box{background:#fff;border-radius:8px;padding:10px 20px;box-shadow:0 2px 6px rgba(0,0,0,.08);text-align:center;min-width:200px}
-    .metric-box h3{margin:0 0 5px;font-size:.95rem;color:#666}
+    .metric-box{background:var(--card-bg);border-radius:10px;padding:12px 22px;
+                box-shadow:var(--shadow-lg),var(--inset);text-align:center;min-width:200px}
+    .metric-box h3{margin:0 0 6px;font-size:.95rem;color:#666}
     .metric-box span{font-size:1.55rem;font-weight:bold}
-    .sub-metrics{display:flex;gap:14px;margin-top:6px;justify-content:center}
-    .sub-box{background:#f0f0f0;border-radius:6px;padding:6px 10px;min-width:90px}
+    .sub-metrics{display:flex;gap:14px;margin-top:8px;justify-content:center}
+    .sub-box{background:#f5f7fa;border-radius:8px;padding:6px 10px;min-width:95px;
+             box-shadow:var(--shadow-sm),var(--inset)}
     .sub-box h4{margin:0;font-size:.7rem;font-weight:600;color:#555}
     .sub-box span{font-size:.9rem;font-weight:bold}
-    /* Legend */
-    .legend{display:flex;align-items:center;gap:8px;margin-top:15px}
+
+    .legend{display:flex;align-items:center;gap:8px;margin-top:16px}
+    .legend-card{background:var(--card-bg);border-radius:10px;padding:12px 20px;
+                 box-shadow:var(--shadow-lg),var(--inset)}
+
     /* Scatter SVG */
-    svg#scatter{background:linear-gradient(135deg,#eaeaea 0%,#ffffff 100%);
-                border-radius:8px;box-shadow:var(--shadow)}
+    svg#scatter{
+        background:linear-gradient(160deg,#e9f4ff 0%,#ffffff 70%);
+        border-radius:12px;
+        box-shadow:var(--shadow-lg)
+    }
 </style>
 </head>
 <body>
@@ -40,14 +56,15 @@
 <div id="chart-container">
     <svg id="scatter" width="820" height="620"></svg>
 
+    <!-- Slider / Play -->
     <div id="controls">
         <label for="threshold"><strong>Combined&nbsp;Score&nbsp;≥</strong>&nbsp;<span id="thresh-val"></span></label>
         <input type="range" id="threshold" min="1" max="10" step="1" value="1">
         <button id="toggle">Play</button>
     </div>
 
+    <!-- Metric cards -->
     <div id="metrics">
-        <!-- Acceptance -->
         <div class="metric-box">
             <h3>Total Acceptance Rate</h3><span id="acc-rate">0%</span>
             <div class="sub-metrics">
@@ -55,7 +72,6 @@
                 <div class="sub-box"><h4>Telco Only</h4><span id="acc-telco">0%</span></div>
             </div>
         </div>
-        <!-- Default -->
         <div class="metric-box">
             <h3>Total Default Rate</h3><span id="def-rate">0%</span>
             <div class="sub-metrics">
@@ -63,110 +79,132 @@
                 <div class="sub-box"><h4>Telco Only</h4><span id="def-telco">0%</span></div>
             </div>
         </div>
-        <!-- Benefit -->
         <div class="metric-box">
             <h3>Monetary&nbsp;benefit<br/>per&nbsp;application&nbsp;(PHP)</h3>
             <span id="benefit">₱0</span>
         </div>
     </div>
 
-    <div class="legend" id="legend"></div>
+    <!-- Legend -->
+    <div class="legend">
+        <div id="legend" class="legend-card"></div>
+    </div>
 </div>
 
 <script>
-/* ------------- CONFIG ------------- */
-const CSV_PATH      = "data.csv";      // change to raw URL if needed
-const BASE_BENEFIT  = 1275;
-const RADIUS        = 14;
-const FADE_OPACITY  = 0.2;
+/* -------- CONFIG -------- */
+const CSV_PATH     = "data.csv";
+const BASE_BENEFIT = 1275;
+const RADIUS       = 14;
+const FADE_OPACITY = 0.2;
 
-/* ------------- SVG & scales ------------- */
+/* -------- SVG & scales -------- */
 const svg  = d3.select("#scatter"),
       W    = +svg.attr("width"),
       H    = +svg.attr("height"),
       M    = {top:50,right:50,bottom:80,left:100};
 
-const x = d3.scaleLinear()
-            .domain([1,10])
-            .range([M.left+RADIUS, W-M.right-RADIUS]);
-
-/*  NEW: worst (10) at BOTTOM, best (1) at TOP  */
-const y = d3.scaleLinear()
-            .domain([1,10])                  // 1 (best) top, 10 (worst) bottom
-            .range([M.top+RADIUS, H-M.bottom-RADIUS]);
+const x = d3.scaleLinear().domain([1,10]).range([M.left+RADIUS, W-M.right-RADIUS]),
+      y = d3.scaleLinear().domain([1,10]).range([M.top+RADIUS, H-M.bottom-RADIUS]); // inverted visual
 
 const colour = d3.scaleThreshold()
   .domain([0.11,0.20,0.32,0.42,0.50])
   .range(["#9CCC65","#D4E157","#FFEE58","#FFCA28","#FFA726","#FF7043"]);
 
-/* ------------- LOAD CSV & draw ------------- */
+/* -------- data -------- */
 d3.csv(CSV_PATH, d3.autoType).then(raw => {
 
-  const clean = raw.filter(r => !Object.values(r).some(v=>v==="#N/A"||v===null));
+  const clean = raw.filter(r=>!Object.values(r).some(v=>v==="#N/A"||v===null));
 
   const data = d3.rollups(
       clean,
-      v=>({
-        telco:v[0]["FinScore Telco"],
-        bank:v[0]["Bank Internal Score"],
-        comb:v[0]["Combined Score"],
-        bad:d3.mean(v,d=>d["Good/Bad Flag"]),
-        n:v.length}),
+      v=>({telco:v[0]["FinScore Telco"], bank:v[0]["Bank Internal Score"],
+           comb:v[0]["Combined Score"], bad:d3.mean(v,d=>d["Good/Bad Flag"]), n:v.length}),
       d=>`${d["FinScore Telco"]}-${d["Bank Internal Score"]}-${d["Combined Score"]}`
     ).map(d=>d[1]);
 
-  /* ---- axes ---- */
-  const ax = svg.append("g");
+  /* -------- axes -------- */
+  svg.append("g")
+     .attr("transform",`translate(0,${H-M.bottom})`)
+     .call(d3.axisBottom(x).ticks(10))
+     .call(g=>g.selectAll(".domain,.tick line").attr("stroke","#7f7f7f").attr("stroke-width",2));
 
-  ax.append("g")
-    .attr("transform",`translate(0,${H-M.bottom})`)
-    .call(d3.axisBottom(x).ticks(10))
-    .call(g=>g.selectAll(".domain,.tick line").attr("stroke","#888").attr("stroke-width",2));
-
-  ax.append("g")
-    .attr("transform",`translate(${M.left},0)`)
-    .call(d3.axisLeft(y).ticks(10))
-    .call(g=>g.selectAll(".domain,.tick line").attr("stroke","#888").attr("stroke-width",2));
+  svg.append("g")
+     .attr("transform",`translate(${M.left},0)`)
+     .call(d3.axisLeft(y).ticks(10))
+     .call(g=>g.selectAll(".domain,.tick line").attr("stroke","#7f7f7f").attr("stroke-width",2));
 
   svg.append("text")
       .attr("x",W/2).attr("y",H-M.bottom+55)
       .attr("text-anchor","middle").attr("font-size","18px").attr("font-weight","bold")
       .text("FinScore Telco Score");
-
   svg.append("text")
       .attr("transform","rotate(-90)")
       .attr("x",-H/2).attr("y",M.left-70)
       .attr("text-anchor","middle").attr("font-size","18px").attr("font-weight","bold")
       .text("Bank Internal Score");
 
-  /* ---- bubbles ---- */
-  svg.append("defs").append("filter").attr("id","shadow")
-      .append("feDropShadow").attr("dx","1").attr("dy","1")
-      .attr("stdDeviation","1.5").attr("flood-color","#000").attr("flood-opacity",".35");
+  /* -------- bubble defs -------- */
+  const defs = svg.append("defs");
 
-  const gDots = svg.append("g").attr("filter","url(#shadow)");
+  /* drop-shadow */
+  const shadow = defs.append("filter").attr("id","drop").attr("height","130%");
+  shadow.append("feDropShadow")
+        .attr("dx","1").attr("dy","1").attr("stdDeviation","1.5")
+        .attr("flood-color","#000").attr("flood-opacity",".35");
+
+  /* subtle inner-highlight */
+  defs.append("filter").attr("id","inner")
+      .html(`
+        <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/>
+        <feComposite operator="over" in="SourceGraphic" in2="blur"/>
+      `);
+
+  /* -------- bubbles -------- */
+  const gDots = svg.append("g").attr("filter","url(#drop)");
 
   gDots.selectAll("circle")
     .data(data).join("circle")
-      .attr("cx",d=>x(d.telco)).attr("cy",d=>y(d.bank))
-      .attr("r",RADIUS).attr("fill",d=>colour(d.bad))
-      .attr("stroke","#333").attr("stroke-width",0.7);
+      .attr("cx",d=>x(d.telco))
+      .attr("cy",d=>y(d.bank))
+      .attr("r",RADIUS)
+      .attr("fill",d=>colour(d.bad))
+      .attr("filter","url(#inner)")       /* subtle soft-edge */
+      .attr("stroke","#333").attr("stroke-width",0.6);
 
+  /* glossy highlight overlay */
+  gDots.selectAll("circle.highlight")
+    .data(data).join("circle")
+      .attr("class","highlight")
+      .attr("cx",d=>x(d.telco)-RADIUS/3)  /* offset up-left for specular look */
+      .attr("cy",d=>y(d.bank)-RADIUS/3)
+      .attr("r",RADIUS*0.4)
+      .attr("fill","#ffffff").attr("opacity",0.18)
+      .attr("pointer-events","none");
+
+  /* percentage labels */
   gDots.selectAll("text")
     .data(data).join("text")
-      .attr("x",d=>x(d.telco)).attr("y",d=>y(d.bank)).attr("dy",".35em")
-      .attr("text-anchor","middle").attr("font-size",".78rem")
-      .attr("font-weight","bold").attr("fill","#000").attr("pointer-events","none")
+      .attr("x",d=>x(d.telco))
+      .attr("y",d=>y(d.bank))
+      .attr("dy",".35em")
+      .attr("text-anchor","middle")
+      .attr("font-size",".78rem")
+      .attr("font-weight","bold")
+      .attr("fill","#000")
+      .attr("pointer-events","none")
       .text(d=>d3.format(".0%")(d.bad));
 
-  /* ---- tooltip ---- */
+  /* -------- tooltip -------- */
   const tt=d3.select("body").append("div")
         .style("position","absolute").style("pointer-events","none")
         .style("background","#fff").style("border","1px solid #ccc")
-        .style("padding","6px 10px").style("border-radius","4px")
-        .style("font-size",".8rem").style("opacity",0);
-  gDots.selectAll("circle")
-    .on("mouseover",(e,d)=>tt.style("opacity",1).html(
+        .style("padding","6px 10px").style("border-radius","6px")
+        .style("box-shadow","var(--shadow-sm)").style("font-size",".8rem")
+        .style("opacity",0);
+
+  gDots.selectAll("circle").on("mouseover",(e,d)=>
+      tt.style("opacity",1).html(
         `<strong>FinScore Telco:</strong> ${d.telco}<br>
          <strong>Bank Score:</strong> ${d.bank}<br>
          <strong>Combined Score:</strong> ${d.comb}<br>
@@ -175,19 +213,19 @@ d3.csv(CSV_PATH, d3.autoType).then(raw => {
     .on("mousemove",e=>tt.style("left",(e.pageX+12)+"px").style("top",(e.pageY-30)+"px"))
     .on("mouseout",()=>tt.style("opacity",0));
 
-  /* ---- legend ---- */
+  /* -------- legend -------- */
   const lgData=[["0–10%","#9CCC65"],["11–19%","#D4E157"],["20–31%","#FFEE58"],
                 ["32–41%","#FFCA28"],["42–49%","#FFA726"],["50–100%","#FF7043"]];
   const lg=d3.select("#legend").html("").append("svg").attr("width",460).attr("height",40);
   lg.selectAll("g").data(lgData).join("g")
     .attr("transform",(d,i)=>`translate(${i*75},0)`)
     .call(g=>{
-        g.append("rect").attr("x",0).attr("y",12).attr("width",16).attr("height",16)
-          .attr("fill",d=>d[1]).attr("stroke","#333").attr("stroke-width",.4);
-        g.append("text").attr("x",20).attr("y",25).attr("font-size",".8rem").text(d=>d[0]);
+       g.append("rect").attr("x",0).attr("y",12).attr("width",16).attr("height",16)
+        .attr("fill",d=>d[1]).attr("stroke","#333").attr("stroke-width",.4);
+       g.append("text").attr("x",20).attr("y",25).attr("font-size",".8rem").text(d=>d[0]);
     });
 
-  /* ---- slider / metrics ---- */
+  /* -------- slider + metrics -------- */
   const slider=d3.select("#threshold"),threshV=d3.select("#thresh-val"),
         accSp=d3.select("#acc-rate"),defSp=d3.select("#def-rate"),benSp=d3.select("#benefit"),
         accBankSp=d3.select("#acc-bank"),accTelSp=d3.select("#acc-telco"),
@@ -202,28 +240,30 @@ d3.csv(CSV_PATH, d3.autoType).then(raw => {
   function update(th){
       threshV.text(th);
 
-      /* combined threshold */
       const combined=d=>d.comb>=th,
-            statsComb=rateStats(combined),
-            statsBank=rateStats(d=>d.bank>=th),
-            statsTel =rateStats(d=>d.telco>=th);
+            sComb=rateStats(combined),
+            sBank=rateStats(d=>d.bank>=th),
+            sTel =rateStats(d=>d.telco>=th);
 
-      accSp.text((statsComb.accept*100).toFixed(1)+"%");
-      defSp.text((statsComb.default*100).toFixed(1)+"%");
-      benSp.text("₱"+(statsComb.accept*BASE_BENEFIT).toFixed(0));
+      accSp.text((sComb.accept*100).toFixed(1)+"%");
+      defSp.text((sComb.default*100).toFixed(1)+"%");
+      benSp.text("₱"+(sComb.accept*BASE_BENEFIT).toFixed(0));
 
-      accBankSp.text((statsBank.accept*100).toFixed(1)+"%");
-      accTelSp.text((statsTel.accept*100).toFixed(1)+"%");
-      defBankSp.text((statsBank.default*100).toFixed(1)+"%");
-      defTelSp.text((statsTel.default*100).toFixed(1)+"%");
+      accBankSp.text((sBank.accept*100).toFixed(1)+"%");
+      accTelSp.text((sTel.accept*100).toFixed(1)+"%");
+      defBankSp.text((sBank.default*100).toFixed(1)+"%");
+      defTelSp.text((sTel.default*100).toFixed(1)+"%");
 
-      gDots.selectAll("circle").attr("opacity",d=>combined(d)?1:FADE_OPACITY);
-      gDots.selectAll("text").attr("opacity",d=>combined(d)?1:FADE_OPACITY);
+      gDots.selectAll("circle:not(.highlight)")
+           .attr("opacity",d=>combined(d)?1:FADE_OPACITY);
+      gDots.selectAll("text")
+           .attr("opacity",d=>combined(d)?1:FADE_OPACITY);
   }
+
   slider.on("input",function(){update(+this.value);});
   update(+slider.node().value);
 
-  /* ---- play / pause ---- */
+  /* -------- play/pause -------- */
   let timer=null;
   d3.select("#toggle").on("click",function(){
       if(timer){clearInterval(timer);timer=null;this.textContent="Play";return;}
