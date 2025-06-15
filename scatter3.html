@@ -10,12 +10,15 @@
     body{font-family:"Helvetica Neue",Arial,sans-serif;background:#f5f5f5;margin:0;padding:20px;color:#333}
     h1{text-align:center;margin:0 0 15px;font-size:1.45rem}
     #chart-container{display:flex;flex-direction:column;align-items:center}
-    #controls{margin:18px 0;display:flex;gap:18px;align-items:center;background:var(--card-bg);border-radius:10px;box-shadow:var(--shadow-sm),var(--inset);padding:10px 18px;border:1px solid #d5d5d5}
+    /* controls */
+    #controls{margin:18px 0;display:flex;gap:18px;align-items:center;background:var(--card-bg);
+              border-radius:10px;box-shadow:var(--shadow-sm),var(--inset);padding:10px 18px;border:1px solid #d5d5d5}
     input[type=range]{-webkit-appearance:none;width:240px;height:6px;background:#d0d0d0;border-radius:3px;outline:none}
     input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#616161;border:2px solid #fff;cursor:pointer;box-shadow:var(--shadow-sm)}
     input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#616161;border:2px solid #fff;cursor:pointer;box-shadow:var(--shadow-sm)}
     button{background:#616161;color:#fff;border:none;border-radius:6px;padding:6px 16px;font-size:.9rem;cursor:pointer;box-shadow:var(--shadow-sm)}
     button:hover{background:#424242}
+    /* metrics */
     #metrics{display:flex;gap:40px;flex-wrap:wrap;justify-content:center;margin-top:10px}
     .metric-box{background:var(--card-bg);border-radius:10px;padding:12px 22px;box-shadow:var(--shadow-lg),var(--inset);text-align:center;min-width:240px}
     .metric-box h3{margin:0 0 6px;font-size:.95rem;color:#666}
@@ -44,7 +47,6 @@
     </div>
 
     <div id="metrics">
-        <!-- Acceptance -->
         <div class="metric-box">
             <h3>Total Acceptance Rate</h3><span id="acc-rate">0%</span>
             <div class="sub-metrics">
@@ -52,7 +54,7 @@
                 <div class="sub-box"><h4>Telco Only</h4><span id="acc-telco">0%</span></div>
             </div>
         </div>
-        <!-- Default -->
+
         <div class="metric-box">
             <h3>Total Default Rate</h3><span id="def-rate">0%</span>
             <div class="sub-metrics">
@@ -60,7 +62,7 @@
                 <div class="sub-box"><h4>Telco Only</h4><span id="def-telco">0%</span></div>
             </div>
         </div>
-        <!-- Peso benefit -->
+
         <div class="metric-box">
             <h3>Peso Benefit</h3>
             <div class="sub-metrics" style="gap:10px">
@@ -69,7 +71,7 @@
                 <div class="sub-box"><h4>Bank Only<br>Avg / App</h4><span id="benefit-app-bank">₱0</span></div>
             </div>
         </div>
-        <!-- Thin-file -->
+
         <div class="metric-box">
             <h3>Thin-File Approvals Gained</h3>
             <span id="thin-count" class="thin-num">0</span>
@@ -90,90 +92,94 @@ const svg=d3.select("#scatter"),W=+svg.attr("width"),H=+svg.attr("height"),
       M={top:50,right:50,bottom:80,left:100},
       x=d3.scaleLinear().domain([1,10]).range([M.left+RADIUS,W-M.right-RADIUS]),
       y=d3.scaleLinear().domain([1,10]).range([M.top+RADIUS,H-M.bottom-RADIUS]),
-      colour=d3.scaleThreshold().domain([0.11,0.20,0.32,0.42,0.50]).range(["#9CCC65","#D4E157","#FFEE58","#FFCA28","#FFA726","#FF7043"]);
+      colour=d3.scaleThreshold().domain([0.11,0.20,0.32,0.42,0.50])
+            .range(["#9CCC65","#D4E157","#FFEE58","#FFCA28","#FFA726","#FF7043"]);
 
 d3.csv(CSV_PATH,d3.autoType).then(raw=>{
   const data=d3.rollups(raw.filter(r=>!Object.values(r).some(v=>v==="#N/A"||v===null)),
-      v=>({telco:v[0]["FinScore Telco"],bank:v[0]["Bank Internal Score"],comb:v[0]["Combined Score"],
-           bad:d3.mean(v,d=>d["Good/Bad Flag"]),n:v.length}),
+      v=>({telco:v[0]["FinScore Telco"],bank:v[0]["Bank Internal Score"],comb:v[0]["Combined Score"],bad:d3.mean(v,d=>d["Good/Bad Flag"]),n:v.length}),
       d=>`${d["FinScore Telco"]}-${d["Bank Internal Score"]}-${d["Combined Score"]}`).map(d=>d[1]);
 
-  /* axes */
+  /* Axes */
   svg.append("g").attr("transform",`translate(0,${H-M.bottom})`).call(d3.axisBottom(x).ticks(10))
-      .call(g=>g.selectAll(".domain,.tick line").attr("stroke","#7f7f7f").attr("stroke-width",2));
+     .call(g=>g.selectAll(".domain,.tick line").attr("stroke","#7f7f7f").attr("stroke-width",2));
   svg.append("g").attr("transform",`translate(${M.left},0)`).call(d3.axisLeft(y).ticks(10))
-      .call(g=>g.selectAll(".domain,.tick line").attr("stroke","#7f7f7f").attr("stroke-width",2));
+     .call(g=>g.selectAll(".domain,.tick line").attr("stroke","#7f7f7f").attr("stroke-width",2));
   svg.append("text").attr("x",W/2).attr("y",H-M.bottom+55).attr("text-anchor","middle")
-      .attr("font-size","18px").attr("font-weight","bold").text("FinScore Telco Score");
+     .attr("font-size","18px").attr("font-weight","bold").text("FinScore Telco Score");
   svg.append("text").attr("transform","rotate(-90)").attr("x",-H/2).attr("y",M.left-70)
-      .attr("text-anchor","middle").attr("font-size","18px").attr("font-weight","bold")
-      .text("Bank Internal Score");
+     .attr("text-anchor","middle").attr("font-size","18px").attr("font-weight","bold")
+     .text("Bank Internal Score");
 
-  /* filters */
+  /* Filters & dots */
   const defs=svg.append("defs");
-  defs.append("filter").attr("id","drop").append("feDropShadow")
-      .attr("dx","1").attr("dy","1").attr("stdDeviation","1.5")
-      .attr("flood-color","#000").attr("flood-opacity",".35");
+  defs.append("filter").attr("id","drop").append("feDropShadow").attr("dx","1").attr("dy","1")
+      .attr("stdDeviation","1.5").attr("flood-color","#000").attr("flood-opacity",".35");
   defs.append("filter").attr("id","inner").html('<feGaussianBlur stdDeviation="2" result="b"/><feComposite operator="over" in2="b"/>');
 
-  /* dots */
   const gDots=svg.append("g").attr("filter","url(#drop)");
   gDots.selectAll("circle.main").data(data).join("circle")
-      .attr("class","main").attr("cx",d=>x(d.telco)).attr("cy",d=>y(d.bank)).attr("r",RADIUS)
-      .attr("fill",d=>colour(d.bad)).attr("filter","url(#inner)").attr("stroke","#333").attr("stroke-width",0.6);
+      .attr("class","main").attr("cx",d=>x(d.telco)).attr("cy",d=>y(d.bank))
+      .attr("r",RADIUS).attr("fill",d=>colour(d.bad)).attr("filter","url(#inner)")
+      .attr("stroke","#333").attr("stroke-width",0.6);
+
   gDots.selectAll("circle.hl").data(data).join("circle")
       .attr("class","hl").attr("cx",d=>x(d.telco)-RADIUS/3).attr("cy",d=>y(d.bank)-RADIUS/3)
       .attr("r",RADIUS*0.4).attr("fill","#fff").attr("opacity",0.18).attr("pointer-events","none");
+
   gDots.selectAll("text").data(data).join("text")
-      .attr("x",d=>x(d.telco)).attr("y",d=>y(d.bank)).attr("dy",".35em").attr("text-anchor","middle")
-      .attr("font-size",".78rem").attr("font-weight","bold").attr("fill","#000")
-      .attr("pointer-events","none").text(d=>d3.format(".0%")(d.bad));
+      .attr("x",d=>x(d.telco)).attr("y",d=>y(d.bank)).attr("dy",".35em")
+      .attr("text-anchor","middle").attr("font-size",".78rem").attr("font-weight","bold")
+      .attr("fill","#000").attr("pointer-events","none").text(d=>d3.format(".0%")(d.bad));
 
-  /* tooltip */
-  const tip=d3.select("body").append("div").style("position","absolute")
-        .style("pointer-events","none").style("background","#fff").style("border","1px solid #ccc")
-        .style("padding","6px 10px").style("border-radius","6px").style("box-shadow","var(--shadow-sm)")
-        .style("font-size",".8rem").style("opacity",0);
-  gDots.selectAll("circle.main").on("mouseover",(e,d)=>tip.style("opacity",1).html(
-      `<strong>FinScore Telco:</strong> ${d.telco}<br>
-       <strong>Bank Score:</strong> ${d.bank}<br>
-       <strong>Combined Score:</strong> ${d.comb}<br>
-       <strong>Avg Default:</strong> ${(d.bad*100).toFixed(1)}%<br>
-       <strong>Observations:</strong> ${d.n}`))
-    .on("mousemove",e=>tip.style("left",(e.pageX+12)+"px").style("top",(e.pageY-30)+"px"))
-    .on("mouseout",()=>tip.style("opacity",0));
+  /* Tooltip */
+  const tip=d3.select("body").append("div").style("position","absolute").style("pointer-events","none")
+      .style("background","#fff").style("border","1px solid #ccc").style("padding","6px 10px")
+      .style("border-radius","6px").style("box-shadow","var(--shadow-sm)").style("font-size",".8rem").style("opacity",0);
+  gDots.selectAll("circle.main")
+      .on("mouseover",(e,d)=>tip.style("opacity",1).html(
+          `<strong>FinScore Telco:</strong> ${d.telco}<br>
+           <strong>Bank Score:</strong> ${d.bank}<br>
+           <strong>Combined Score:</strong> ${d.comb}<br>
+           <strong>Avg Default:</strong> ${(d.bad*100).toFixed(1)}%<br>
+           <strong>Observations:</strong> ${d.n}`))
+      .on("mousemove",e=>tip.style("left",(e.pageX+12)+"px").style("top",(e.pageY-30)+"px"))
+      .on("mouseout",()=>tip.style("opacity",0));
 
-  /* helper stats */
+  /* Stats */
   const totalN=d3.sum(data,d=>d.n),
         stats=f=>{const s=data.filter(f),n=d3.sum(s,d=>d.n);return {acc:n/totalN,pd:n?d3.sum(s,d=>d.n*d.bad)/n:0,n};};
 
-  /* ROI curve + marker */
+  /* ROI curve */
   const roi=d3.range(1,11).map(t=>{let s=stats(d=>d.comb>=t);return {t,net:(REV_PER_LOAN-(s.pd*LGD_PER_LOAN))*s.acc};}),
-        roiPeak=roi.reduce((a,b)=>b.net>a.net?b:a),
-        rcW=360, rcH=120, rcM=30,
+        peak=roi.reduce((a,b)=>b.net>a.net?b:a),
+        rcW=360,rcH=120,rcM=30,
         rx=d3.scaleLinear().domain([1,10]).range([0,rcW-rcM]),
         ry=d3.scaleLinear().domain([0,d3.max(roi,d=>d.net)]).nice().range([rcH-rcM,0]);
   const rSvg=d3.select("#roi-chart").append("svg").attr("width",rcW).attr("height",rcH);
   rSvg.append("path").datum(roi).attr("fill","none").attr("stroke","#1976d2").attr("stroke-width",2)
       .attr("d",d3.line().x(d=>rx(d.t)).y(d=>ry(d.net)));
-  rSvg.append("circle").attr("cx",rx(roiPeak.t)).attr("cy",ry(roiPeak.net)).attr("r",4).attr("fill","#1976d2");
-  rSvg.append("text").attr("x",rx(roiPeak.t)).attr("y",ry(roiPeak.net)+20).attr("text-anchor","middle")
-      .attr("font-size",".75rem").text(`Peak ₱${roiPeak.net.toFixed(0)} at ≥${roiPeak.t}`);
+  rSvg.append("circle").attr("cx",rx(peak.t)).attr("cy",ry(peak.net)).attr("r",4).attr("fill","#1976d2");
+  rSvg.append("text").attr("x",rx(peak.t)).attr("y",ry(peak.net)+20)
+      .attr("text-anchor","middle").attr("font-size",".75rem")
+      .text(`Peak ₱${peak.net.toFixed(0)} at ≥${peak.t}`);
   rSvg.append("circle").attr("id","roi-current").attr("r",4).attr("fill","#d32f2f");
 
-  /* refs */
+  /* DOM refs */
   const slider=d3.select("#threshold"),threshV=d3.select("#thresh-val"),
         accSp=d3.select("#acc-rate"),defSp=d3.select("#def-rate"),
         accBankSp=d3.select("#acc-bank"),accTelSp=d3.select("#acc-telco"),
         defBankSp=d3.select("#def-bank"),defTelSp=d3.select("#def-telco"),
-        benLoanSp=d3.select("#benefit-loan"),benAppSp=d3.select("#benefit-app"),
-        benAppBankSp=d3.select("#benefit-app-bank"),thinSp=d3.select("#thin-count");
+        benLoanSp=d3.select("#benefit-loan"),benAppSp=d3.select("#benefit-app"),benAppBankSp=d3.select("#benefit-app-bank"),
+        thinSp=d3.select("#thin-count");
 
-  function update(th){
-      threshV.text(th);
+  function update(t){
+      threshV.text(t);
 
-      /* Combined >= t; Bank: lower is better so <= (11-t) */
-      const fComb=d=>d.comb>=th, fBank=d=>d.bank<=11-th, fTel=d=>d.telco>=th;
+      /* Combined / Telco >= t ; Bank (1 best) <= 11 - t */
+      const fComb=d=>d.comb>=t,
+            fBank=d=>d.bank<=11-t,
+            fTel =d=>d.telco>=t;
 
       const sComb=stats(fComb), sBank=stats(fBank), sTel=stats(fTel);
 
@@ -182,9 +188,12 @@ d3.csv(CSV_PATH,d3.autoType).then(raw=>{
             netAppBank=(REV_PER_LOAN-(sBank.pd*LGD_PER_LOAN))*sBank.acc;
 
       accSp.text((sComb.acc*100).toFixed(1)+"%"); defSp.text((sComb.pd*100).toFixed(1)+"%");
-      accBankSp.text((sBank.acc*100).toFixed(1)+"%"); accTelSp.text((sTel.acc*100).toFixed(1)+"%");
-      defBankSp.text((sBank.pd*100).toFixed(1)+"%"); defTelSp.text((sTel.pd*100).toFixed(1)+"%");
-      benLoanSp.text("₱"+netLoan.toFixed(0)); benAppSp.text("₱"+netApp.toFixed(0)); benAppBankSp.text("₱"+netAppBank.toFixed(0));
+      accBankSp.text((sBank.acc*100).toFixed(1)+"%"); defBankSp.text((sBank.pd*100).toFixed(1)+"%");
+      accTelSp.text((sTel.acc*100).toFixed(1)+"%"); defTelSp.text((sTel.pd*100).toFixed(1)+"%");
+
+      benLoanSp.text("₱"+netLoan.toFixed(0));
+      benAppSp.text("₱"+netApp.toFixed(0));
+      benAppBankSp.text("₱"+netAppBank.toFixed(0));
 
       thinSp.text(d3.sum(data.filter(d=>d.bank>=8&&d.telco>=6&&fComb(d)),d=>d.n));
 
@@ -192,8 +201,9 @@ d3.csv(CSV_PATH,d3.autoType).then(raw=>{
       gDots.selectAll("circle.hl").attr("opacity",d=>fComb(d)?0.18:0.18*FADE);
       gDots.selectAll("text").attr("opacity",d=>fComb(d)?1:FADE);
 
-      rSvg.select("#roi-current").attr("cx",rx(th)).attr("cy",ry(netApp));
+      rSvg.select("#roi-current").attr("cx",rx(t)).attr("cy",ry(netApp));
   }
+
   slider.on("input",function(){update(+this.value);});
   update(+slider.node().value);
 
@@ -207,5 +217,6 @@ d3.csv(CSV_PATH,d3.autoType).then(raw=>{
 </script>
 </body>
 </html>
+
 
 
