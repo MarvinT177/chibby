@@ -18,11 +18,16 @@
     button{background:#616161;color:#fff;border:none;border-radius:4px;padding:6px 14px;font-size:.9rem;cursor:pointer}
     button:hover{background:#424242}
     #metrics{display:flex;gap:40px;flex-wrap:wrap;justify-content:center;margin-top:10px}
-    .metric-box{background:#fff;border-radius:8px;padding:10px 20px;box-shadow:0 2px 6px rgba(0,0,0,.08);text-align:center;min-width:165px}
-    .metric-box h3{margin:0 0 5px 0;font-size:.9rem;color:#666}
+    .metric-box{background:#fff;border-radius:8px;padding:10px 20px;box-shadow:0 2px 6px rgba(0,0,0,.08);text-align:center;min-width:200px}
+    .metric-box h3{margin:0 0 5px 0;font-size:.95rem;color:#666}
     .metric-box span{font-size:1.55rem;font-weight:bold}
-    .legend{display:flex;align-items:center;gap:8px;margin-top:14px}
-    svg#scatter{background:#ffffff;border-radius:8px;box-shadow:var(--shadow)}
+    .sub-metrics{display:flex;gap:14px;margin-top:6px;justify-content:center}
+    .sub-box{background:#f0f0f0;border-radius:6px;padding:6px 10px;min-width:90px}
+    .sub-box h4{margin:0;font-size:.7rem;font-weight:600;color:#555}
+    .sub-box span{font-size:.9rem;font-weight:bold}
+    .legend{display:flex;align-items:center;gap:8px;margin-top:15px}
+    svg#scatter{background:linear-gradient(135deg,#eaeaea 0%,#ffffff 100%);
+                border-radius:8px;box-shadow:var(--shadow)}
 </style>
 </head>
 <body>
@@ -38,26 +43,42 @@
     </div>
 
     <div id="metrics">
-        <div class="metric-box"><h3>Acceptance Rate</h3><span id="acc-rate">0%</span></div>
-        <div class="metric-box"><h3>Default Rate</h3><span id="def-rate">0%</span></div>
-        <div class="metric-box"><h3>Monetary&nbsp;benefit<br/>per&nbsp;application&nbsp;(PHP)</h3><span id="benefit">₱0</span></div>
+        <!-- Acceptance + sub-metrics -->
+        <div class="metric-box">
+            <h3>Total Acceptance Rate</h3><span id="acc-rate">0%</span>
+            <div class="sub-metrics">
+                <div class="sub-box"><h4>Bank Only</h4><span id="acc-bank">0%</span></div>
+                <div class="sub-box"><h4>Telco Only</h4><span id="acc-telco">0%</span></div>
+            </div>
+        </div>
+
+        <!-- Default + sub-metrics -->
+        <div class="metric-box">
+            <h3>Total Default Rate</h3><span id="def-rate">0%</span>
+            <div class="sub-metrics">
+                <div class="sub-box"><h4>Bank Only</h4><span id="def-bank">0%</span></div>
+                <div class="sub-box"><h4>Telco Only</h4><span id="def-telco">0%</span></div>
+            </div>
+        </div>
+
+        <!-- Benefit -->
+        <div class="metric-box">
+            <h3>Monetary&nbsp;benefit<br/>per&nbsp;application&nbsp;(PHP)</h3>
+            <span id="benefit">₱0</span>
+        </div>
     </div>
 
     <div class="legend" id="legend"></div>
 </div>
 
 <script>
-/* ------------------------------------------------------------------
-   CONFIG
-------------------------------------------------------------------- */
-const CSV_PATH = "data.csv";               // change to raw GitHub URL if needed
-const BASE_BENEFIT = 1275;                 // new baseline benefit
-const RADIUS = 14;                         // larger dots
-const FADE_OPACITY = 0.2;
+/* -------- CONFIG -------- */
+const CSV_PATH      = "data.csv";   // change if needed
+const BASE_BENEFIT  = 1275;
+const RADIUS        = 14;
+const FADE_OPACITY  = 0.2;
 
-/* ------------------------------------------------------------------
-   SVG + STATIC SCALES
-------------------------------------------------------------------- */
+/* -------- SVG + static scales -------- */
 const svg  = d3.select("#scatter"),
       W    = +svg.attr("width"),
       H    = +svg.attr("height"),
@@ -70,89 +91,69 @@ const colour = d3.scaleThreshold()
   .domain([0.11,0.20,0.32,0.42,0.50])
   .range(["#9CCC65","#D4E157","#FFEE58","#FFCA28","#FFA726","#FF7043"]);
 
-/* ------------------------------------------------------------------
-   LOAD CSV → CLEAN → AGGREGATE → DRAW
-------------------------------------------------------------------- */
+/* ---------- load + draw ---------- */
 d3.csv(CSV_PATH, d3.autoType).then(raw => {
 
-  const clean = raw.filter(r => !Object.values(r).some(v => v==="#N/A"||v===null));
+  const clean = raw.filter(r => !Object.values(r).some(v=>v==="#N/A"||v===null));
 
   const data = d3.rollups(
       clean,
-      v => ({
-        telco: v[0]["FinScore Telco"],
-        bank:  v[0]["Bank Internal Score"],
-        comb:  v[0]["Combined Score"],
-        bad:   d3.mean(v,d=>d["Good/Bad Flag"]),
-        n:     v.length
-      }),
-      d => `${d["FinScore Telco"]}-${d["Bank Internal Score"]}-${d["Combined Score"]}`
+      v=>({
+        telco:v[0]["FinScore Telco"],
+        bank:v[0]["Bank Internal Score"],
+        comb:v[0]["Combined Score"],
+        bad:d3.mean(v,d=>d["Good/Bad Flag"]),
+        n:v.length}),
+      d=>`${d["FinScore Telco"]}-${d["Bank Internal Score"]}-${d["Combined Score"]}`
     ).map(d=>d[1]);
 
-  /* ---------------- axes ---------------- */
-  const ax = svg.append("g").attr("class","axes");
-
+  /* ---- axes ---- */
+  const ax=svg.append("g");
   ax.append("g")
     .attr("transform",`translate(0,${H-M.bottom})`)
     .call(d3.axisBottom(x).ticks(10))
     .call(g=>g.selectAll(".domain,.tick line").attr("stroke","#888").attr("stroke-width",2));
-
   ax.append("g")
     .attr("transform",`translate(${M.left},0)`)
     .call(d3.axisLeft(y).ticks(10))
     .call(g=>g.selectAll(".domain,.tick line").attr("stroke","#888").attr("stroke-width",2));
 
-  /* axis labels (shifted) */
   svg.append("text")
       .attr("x",W/2).attr("y",H-M.bottom+55)
-      .attr("text-anchor","middle")
-      .attr("font-size","15px").attr("font-weight","bold")
+      .attr("text-anchor","middle").attr("font-size","15px").attr("font-weight","bold")
       .text("FinScore Telco (1 = low, 10 = high)");
-
   svg.append("text")
       .attr("transform","rotate(-90)")
       .attr("x",-H/2).attr("y",M.left-70)
-      .attr("text-anchor","middle")
-      .attr("font-size","15px").attr("font-weight","bold")
+      .attr("text-anchor","middle").attr("font-size","15px").attr("font-weight","bold")
       .text("Bank Internal Score (10 = best, 1 = worst)");
 
-  /* ---------------- dots & labels ---------------- */
-  const gDots = svg.append("g")
-        .attr("filter","url(#shadow)");
+  /* ---- dots ---- */
+  svg.append("defs").append("filter").attr("id","shadow")
+      .append("feDropShadow").attr("dx","1").attr("dy","1")
+      .attr("stdDeviation","1.5").attr("flood-color","#000").attr("flood-opacity",".35");
 
-  svg.append("defs").append("filter")
-     .attr("id","shadow")
-     .append("feDropShadow")
-       .attr("dx","1").attr("dy","1").attr("stdDeviation","1.5")
-       .attr("flood-color","#000").attr("flood-opacity",".35");
+  const gDots=svg.append("g").attr("filter","url(#shadow)");
 
   gDots.selectAll("circle")
     .data(data).join("circle")
-      .attr("cx",d=>x(d.telco))
-      .attr("cy",d=>y(d.bank))
-      .attr("r",RADIUS)
-      .attr("fill",d=>colour(d.bad))
+      .attr("cx",d=>x(d.telco)).attr("cy",d=>y(d.bank))
+      .attr("r",RADIUS).attr("fill",d=>colour(d.bad))
       .attr("stroke","#333").attr("stroke-width",0.7);
 
   gDots.selectAll("text")
     .data(data).join("text")
-      .attr("x",d=>x(d.telco))
-      .attr("y",d=>y(d.bank))
-      .attr("dy",".35em")
-      .attr("text-anchor","middle")
-      .attr("font-size",".78rem")
-      .attr("font-weight","bold")
-      .attr("fill","#000")
-      .attr("pointer-events","none")
+      .attr("x",d=>x(d.telco)).attr("y",d=>y(d.bank)).attr("dy",".35em")
+      .attr("text-anchor","middle").attr("font-size",".78rem")
+      .attr("font-weight","bold").attr("fill","#000").attr("pointer-events","none")
       .text(d=>d3.format(".0%")(d.bad));
 
-  /* ---------------- tooltip ---------------- */
-  const tt = d3.select("body").append("div")
+  /* ---- tooltip ---- */
+  const tt=d3.select("body").append("div")
         .style("position","absolute").style("pointer-events","none")
         .style("background","#fff").style("border","1px solid #ccc")
         .style("padding","6px 10px").style("border-radius","4px")
         .style("font-size",".8rem").style("opacity",0);
-
   gDots.selectAll("circle")
     .on("mouseover",(e,d)=>tt.style("opacity",1).html(
         `<strong>FinScore Telco:</strong> ${d.telco}<br>
@@ -163,51 +164,64 @@ d3.csv(CSV_PATH, d3.autoType).then(raw => {
     .on("mousemove",e=>tt.style("left",(e.pageX+12)+"px").style("top",(e.pageY-30)+"px"))
     .on("mouseout",()=>tt.style("opacity",0));
 
-  /* ---------------- legend ---------------- */
-  const lgData=[
-    ["0–10%","#9CCC65"],["11–19%","#D4E157"],["20–31%","#FFEE58"],
-    ["32–41%","#FFCA28"],["42–49%","#FFA726"],["50–100%","#FF7043"] ];
-  const lg = d3.select("#legend").html("").append("svg")
-               .attr("width",460).attr("height",40);
-
-  lg.selectAll("g")
-    .data(lgData).join("g")
-      .attr("transform",(d,i)=>`translate(${i*75},0)`)
+  /* ---- legend ---- */
+  const lgData=[["0–10%","#9CCC65"],["11–19%","#D4E157"],["20–31%","#FFEE58"],
+                ["32–41%","#FFCA28"],["42–49%","#FFA726"],["50–100%","#FF7043"]];
+  const lg=d3.select("#legend").html("").append("svg").attr("width",460).attr("height",40);
+  lg.selectAll("g").data(lgData).join("g")
+    .attr("transform",(d,i)=>`translate(${i*75},0)`)
     .call(g=>{
-       g.append("rect").attr("x",0).attr("y",12).attr("width",16).attr("height",16)
-        .attr("fill",d=>d[1]).attr("stroke","#333").attr("stroke-width",.4);
-       g.append("text").attr("x",20).attr("y",25).attr("font-size",".8rem").text(d=>d[0]);
+        g.append("rect").attr("x",0).attr("y",12).attr("width",16).attr("height",16)
+          .attr("fill",d=>d[1]).attr("stroke","#333").attr("stroke-width",.4);
+        g.append("text").attr("x",20).attr("y",25).attr("font-size",".8rem").text(d=>d[0]);
     });
 
-  /* ---------------- slider / metrics ---------------- */
-  const slider  = d3.select("#threshold"),
-        threshV = d3.select("#thresh-val"),
-        accSp   = d3.select("#acc-rate"),
-        defSp   = d3.select("#def-rate"),
-        benSp   = d3.select("#benefit"),
-        totalN  = d3.sum(data,d=>d.n);
+  /* ---- slider / metrics ---- */
+  const slider=d3.select("#threshold"),threshV=d3.select("#thresh-val"),
+        accSp=d3.select("#acc-rate"),defSp=d3.select("#def-rate"),benSp=d3.select("#benefit"),
+        accBankSp=d3.select("#acc-bank"),accTelSp=d3.select("#acc-telco"),
+        defBankSp=d3.select("#def-bank"),defTelSp=d3.select("#def-telco"),
+        totalN=d3.sum(data,d=>d.n);
+
+  function rateStats(filterFn){
+      const subset=data.filter(filterFn),
+            n=d3.sum(subset,d=>d.n);
+      return {
+        accept:n/totalN,
+        default:n?d3.sum(subset,d=>d.n*d.bad)/n:0
+      };
+  }
 
   function update(th){
       threshV.text(th);
-      const show = d => d.comb >= th,
-            acc  = data.filter(show),
-            nAcc = d3.sum(acc,d=>d.n),
-            accR = nAcc/totalN,
-            defR = nAcc ? d3.sum(acc,d=>d.n*d.bad)/nAcc : 0;
 
-      accSp.text((accR*100).toFixed(1)+"%");
-      defSp.text((defR*100).toFixed(1)+"%");
-      benSp.text("₱"+(accR*BASE_BENEFIT).toFixed(0));
+      /* combined criteria */
+      const combined=d=>d.comb>=th,
+            statsComb=rateStats(combined);
 
-      gDots.selectAll("circle")
-           .attr("opacity",d=>show(d)?1:FADE_OPACITY);
-      gDots.selectAll("text")
-           .attr("opacity",d=>show(d)?1:FADE_OPACITY);
+      /* single criteria */
+      const statsBank=rateStats(d=>d.bank>=th),
+            statsTel =rateStats(d=>d.telco>=th);
+
+      /* update numbers */
+      accSp.text((statsComb.accept*100).toFixed(1)+"%");
+      defSp.text((statsComb.default*100).toFixed(1)+"%");
+      benSp.text("₱"+(statsComb.accept*BASE_BENEFIT).toFixed(0));
+
+      accBankSp.text((statsBank.accept*100).toFixed(1)+"%");
+      accTelSp.text((statsTel.accept*100).toFixed(1)+"%");
+      defBankSp.text((statsBank.default*100).toFixed(1)+"%");
+      defTelSp.text((statsTel.default*100).toFixed(1)+"%");
+
+      /* shading */
+      gDots.selectAll("circle").attr("opacity",d=>combined(d)?1:FADE_OPACITY);
+      gDots.selectAll("text").attr("opacity",d=>combined(d)?1:FADE_OPACITY);
   }
+
   slider.on("input",function(){update(+this.value);});
   update(+slider.node().value);
 
-  /* play/pause */
+  /* ---- play/pause ---- */
   let timer=null;
   d3.select("#toggle").on("click",function(){
       if(timer){clearInterval(timer);timer=null;this.textContent="Play";return;}
