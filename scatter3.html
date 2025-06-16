@@ -10,12 +10,14 @@
 body{font-family:"Helvetica Neue",Arial,sans-serif;background:#f5f5f5;margin:0;padding:14px;color:#333;font-size:13px}
 h1{text-align:center;margin:0 0 10px;font-size:1.15rem}
 
+/* layout */
 #dashboard{display:flex;gap:14px;align-items:flex-start;justify-content:center;flex-wrap:wrap}
 #left-col,#right-col{display:flex;flex-direction:column;gap:12px}
 #center-col{display:flex;flex-direction:column;align-items:center;gap:12px}
 @media(max-width:900px){#dashboard{flex-direction:column;align-items:center}}
 
-.metric-box{background:var(--card-bg);border-radius:8px;padding:6px 10px;box-shadow:var(--shadow-lg);text-align:center;min-width:140px;max-width:140px}
+/* cards */
+.metric-box{background:var(--card-bg);border-radius:8px;padding:6px 10px;box-shadow:var(--shadow-lg);text-align:center;min-width:140px}
 .metric-box h3{margin:0 0 3px;font-size:.72rem;color:#666}
 .metric-box span{font-size:1.05rem;font-weight:600}
 .sub-metrics{display:flex;gap:6px;margin-top:3px;justify-content:center;flex-wrap:wrap}
@@ -25,30 +27,35 @@ h1{text-align:center;margin:0 0 10px;font-size:1.15rem}
 .thin-num{font-size:1rem;font-weight:600;color:var(--thin-green)}
 input[type=number]{width:56px;border:1px solid #aaa;border-radius:6px;padding:3px 5px;text-align:right;font-size:.7rem}
 
-#thin-toggle{margin-top:4px;border:none;border-radius:6px;font-size:.62rem;padding:3px 8px;cursor:pointer;box-shadow:var(--shadow-sm);background:#616161;color:#fff}
+#thin-toggle{margin-top:4px;border:none;border-radius:6px;font-size:.62rem;padding:3px 8px;
+             cursor:pointer;box-shadow:var(--shadow-sm);background:#616161;color:#fff}
 #thin-toggle.active{background:var(--thin-green);color:#000}
 
-#controls{display:flex;gap:10px;align-items:center;background:var(--card-bg);border-radius:8px;box-shadow:var(--shadow-sm);padding:5px 12px;border:1px solid #d5d5d5;font-size:.7rem}
+/* slider controls */
+#controls{display:flex;gap:10px;align-items:center;background:var(--card-bg);border-radius:8px;
+          box-shadow:var(--shadow-sm);padding:5px 12px;border:1px solid #d5d5d5;font-size:.7rem}
 input[type=range]{-webkit-appearance:none;width:150px;height:4px;background:#d0d0d0;border-radius:3px}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#616161;border:2px solid #fff;cursor:pointer;box-shadow:var(--shadow-sm)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;
+    background:#616161;border:2px solid #fff;cursor:pointer;box-shadow:var(--shadow-sm)}
 input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#616161;border:2px solid #fff;cursor:pointer;box-shadow:var(--shadow-sm)}
 button{background:#616161;color:#fff;border:none;border-radius:6px;padding:3px 10px;font-size:.7rem;cursor:pointer;box-shadow:var(--shadow-sm)}
 button:hover{background:#424242}
 
+/* chart & roi */
 svg#scatter{background:linear-gradient(160deg,#e9f4ff 0%,#ffffff 70%);border-radius:10px;box-shadow:var(--shadow-lg)}
-
-#roi-box{background:var(--card-bg);border-radius:8px;padding:6px 10px;box-shadow:var(--shadow-lg);text-align:center;min-width:140px;max-width:140px}
+#roi-box{background:var(--card-bg);border-radius:8px;padding:6px 10px;box-shadow:var(--shadow-lg);text-align:center;min-width:140px}
 #roi-box h3{margin:0 0 3px;font-size:.72rem;color:#666}
 #roi-chart svg{overflow:visible}
 
-@keyframes pulse{0%{r:12;opacity:.6}50%{r:18;opacity:0}100%{r:12;opacity:.6}}
+/* pulsing halo */
+@keyframes pulse{0%{r:14;opacity:.8}50%{r:26;opacity:0}100%{r:14;opacity:.8}}
 </style>
 </head>
 <body>
 <h1>Bank Internal Score &amp; FinScore Telco</h1>
 
 <div id="dashboard">
-  <!-- left -->
+  <!-- LEFT COL -->
   <div id="left-col">
     <div class="metric-box">
       <h3>Combined Approval</h3><span id="acc-rate">0%</span>
@@ -63,11 +70,13 @@ svg#scatter{background:linear-gradient(160deg,#e9f4ff 0%,#ffffff 70%);border-rad
         <div class="sub-box"><h4>Bank</h4><span id="def-bank">0%</span></div>
         <div class="sub-box"><h4>Telco</h4><span id="def-telco">0%</span></div>
       </div>
-      <div style="margin-top:3px;font-size:.62rem;color:#555">Target % <input id="target-def" type="number" min="0" max="100" step="0.1"></div>
+      <div style="margin-top:3px;font-size:.62rem;color:#555">
+        Target % <input id="target-def" type="number" min="0" max="100" step="0.1">
+      </div>
     </div>
   </div>
 
-  <!-- center -->
+  <!-- CENTER COL -->
   <div id="center-col">
     <svg id="scatter" width="540" height="420"></svg>
     <div id="controls">
@@ -77,7 +86,7 @@ svg#scatter{background:linear-gradient(160deg,#e9f4ff 0%,#ffffff 70%);border-rad
     </div>
   </div>
 
-  <!-- right -->
+  <!-- RIGHT COL -->
   <div id="right-col">
     <div class="metric-box">
       <h3>Peso Benefit</h3>
@@ -87,14 +96,15 @@ svg#scatter{background:linear-gradient(160deg,#e9f4ff 0%,#ffffff 70%);border-rad
         <div class="sub-box"><h4>Bank Avg</h4><span id="benefit-app-bank">₱0</span></div>
       </div>
     </div>
+
     <div class="metric-box">
       <h3>Thin-File Gains</h3>
       <span id="thin-count" class="thin-num">0</span>
       <button id="thin-toggle">Highlight</button>
     </div>
+
     <div id="roi-box">
-      <h3>ROI Curve</h3>
-      <div id="roi-chart"></div>
+      <h3>ROI Curve</h3><div id="roi-chart"></div>
     </div>
   </div>
 </div>
@@ -127,21 +137,27 @@ d3.csv(CSV_PATH,d3.autoType).then(raw=>{
 
   const gDots=svg.append("g").attr("filter","url(#drop)");
   gDots.selectAll("circle.main").data(data).join("circle").attr("class","main")
-      .attr("cx",d=>x(d.telco)).attr("cy",d=>y(d.bank)).attr("r",RADIUS).attr("fill",d=>colour(d.bad))
-      .attr("filter","url(#inner)").attr("stroke","#333").attr("stroke-width",.4);
+      .attr("cx",d=>x(d.telco)).attr("cy",d=>y(d.bank)).attr("r",RADIUS)
+      .attr("fill",d=>colour(d.bad)).attr("filter","url(#inner)").attr("stroke","#333").attr("stroke-width",.4);
   gDots.selectAll("circle.hl").data(data).join("circle").attr("class","hl")
-      .attr("cx",d=>x(d.telco)-RADIUS/3).attr("cy",d=>y(d.bank)-RADIUS/3).attr("r",RADIUS*.4)
-      .attr("fill","#fff").attr("opacity",.18).attr("pointer-events","none");
-  gDots.selectAll("text").data(data).join("text").attr("x",d=>x(d.telco)).attr("y",d=>y(d.bank)).attr("dy",".35em")
-      .attr("text-anchor","middle").attr("font-size",".58rem").attr("font-weight","600").attr("fill","#000").attr("pointer-events","none")
+      .attr("cx",d=>x(d.telco)-RADIUS/3).attr("cy",d=>y(d.bank)-RADIUS/3)
+      .attr("r",RADIUS*.4).attr("fill","#fff").attr("opacity",.18).attr("pointer-events","none");
+  gDots.selectAll("text").data(data).join("text")
+      .attr("x",d=>x(d.telco)).attr("y",d=>y(d.bank)).attr("dy",".35em")
+      .attr("text-anchor","middle").attr("font-size",".58rem").attr("font-weight","600")
+      .attr("fill","#000").attr("pointer-events","none")
       .text(d=>d3.format(".0%")(d.bad));
 
   const tip=d3.select("body").append("div").style("position","absolute").style("pointer-events","none")
-      .style("background","#fff").style("border","1px solid #ccc").style("padding","4px 7px").style("border-radius","6px")
+      .style("background","#fff").style("border","1px solid #ccc")
+      .style("padding","4px 7px").style("border-radius","6px")
       .style("box-shadow","var(--shadow-sm)").style("font-size",".65rem").style("opacity",0);
+
   gDots.selectAll("circle.main")
-      .on("mouseover",(e,d)=>tip.style("opacity",1).html(`<strong>T:</strong> ${d.telco}&nbsp; <strong>B:</strong> ${d.bank}<br>Comb: ${d.comb}&nbsp; Pd: ${(d.bad*100).toFixed(1)}%<br>N: ${d.n}`))
-      .on("mousemove",(e)=>tip.style("left",(e.pageX+9)+"px").style("top",(e.pageY-26)+"px"))
+      .on("mouseover",(e,d)=>tip.style("opacity",1).html(
+        `<strong>T:</strong> ${d.telco}&nbsp; <strong>B:</strong> ${d.bank}<br>
+         Comb: ${d.comb} &nbsp; Pd: ${(d.bad*100).toFixed(1)}%<br>N: ${d.n}`))
+      .on("mousemove",e=>tip.style("left",(e.pageX+9)+"px").style("top",(e.pageY-26)+"px"))
       .on("mouseout",()=>tip.style("opacity",0));
 
   const stats=f=>{const s=data.filter(f),n=d3.sum(s,d=>d.n);return{acc:n/totalApps,pd:n?d3.sum(s,d=>d.n*d.bad)/n:0}};
@@ -157,21 +173,22 @@ d3.csv(CSV_PATH,d3.autoType).then(raw=>{
   rSvg.append("circle").attr("id","roi-cur").attr("r",3).attr("fill","#d32f2f");
 
   const slider=d3.select("#threshold"),threshV=d3.select("#thresh-val"),
-        accSp=d3.select("#acc-rate"),defSp=d3.select("#def-rate"),accBankSp=d3.select("#acc-bank"),
-        accTelSp=d3.select("#acc-telco"),defBankSp=d3.select("#def-bank"),defTelSp=d3.select("#def-telco"),
+        accSp=d3.select("#acc-rate"),defSp=d3.select("#def-rate"),
+        accBankSp=d3.select("#acc-bank"),accTelSp=d3.select("#acc-telco"),
+        defBankSp=d3.select("#def-bank"),defTelSp=d3.select("#def-telco"),
         benLoanSp=d3.select("#benefit-loan"),benAppSp=d3.select("#benefit-app"),benAppBankSp=d3.select("#benefit-app-bank"),
         thinSp=d3.select("#thin-count"),targetBox=d3.select("#target-def"),thinToggle=d3.select("#thin-toggle");
 
-  const haloLayer=svg.append("g");
-  let showHalo=false;
+  const haloLayer=svg.append("g"); let showHalo=false;
 
   const highlightHalos=t=>{
       const fComb=d=>d.comb>=t,fBank=d=>d.bank<=11-t,
             thin=d=>d.bank>=8&&d.telco>=6&&fComb(d)&&!fBank(d);
       const halos=haloLayer.selectAll("circle.halo").data(showHalo?data.filter(thin):[],d=>`${d.telco}-${d.bank}-${d.comb}`);
       halos.enter().append("circle").attr("class","halo")
-           .attr("cx",d=>x(d.telco)).attr("cy",d=>y(d.bank)).attr("r",12).attr("fill","none")
-           .attr("stroke","var(--thin-green)").attr("stroke-width",1.6).style("animation","pulse 1.8s ease-out infinite");
+           .attr("cx",d=>x(d.telco)).attr("cy",d=>y(d.bank))
+           .attr("r",14).attr("fill","none").attr("stroke","var(--thin-green)").attr("stroke-width",2.5)
+           .style("animation","pulse 1.4s ease-out infinite");
       halos.exit().remove();
   };
 
@@ -180,6 +197,7 @@ d3.csv(CSV_PATH,d3.autoType).then(raw=>{
       const fComb=d=>d.comb>=t,fTel=d=>d.telco>=t,fBank=d=>d.bank<=11-t;
       const sComb=stats(fComb),sBank=stats(fBank),sTel=stats(fTel);
       const netLoan=REV_PER_LOAN-(sComb.pd*LGD_PER_LOAN),netApp=netLoan*sComb.acc,netAppBank=(REV_PER_LOAN-(sBank.pd*LGD_PER_LOAN))*sBank.acc;
+
       accSp.text((sComb.acc*100).toFixed(1)+"%");defSp.text((sComb.pd*100).toFixed(1)+"%");
       accBankSp.text((sBank.acc*100).toFixed(1)+"%");defBankSp.text((sBank.pd*100).toFixed(1)+"%");
       accTelSp.text((sTel.acc*100).toFixed(1)+"%");defTelSp.text((sTel.pd*100).toFixed(1)+"%");
@@ -215,6 +233,7 @@ d3.csv(CSV_PATH,d3.autoType).then(raw=>{
 </script>
 </body>
 </html>
+
 
 
 
