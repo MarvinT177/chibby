@@ -192,8 +192,10 @@ d3.csv(CSV_PATH,d3.autoType).then(raw=>{
   rSvg.append("path").datum(roi).attr("fill","none").attr("stroke","#1976d2").attr("stroke-width",1.4)
       .attr("d",d3.line().x(d=>rx(d.t)).y(d=>ry(d.net)));
   rSvg.append("circle").attr("cx",rx(peak.t)).attr("cy",ry(peak.net)).attr("r",3).attr("fill","#1976d2");
-  rSvg.append("text").attr("x",rx(peak.t)).attr("y",ry(peak.net)+15)
-      .attr("text-anchor","middle").attr("font-size",".55rem")
+  rSvg.append("text")
+      .attr("x",rW/2).attr("y",rH-6)                 // bottom-center of the square
+      .attr("text-anchor","middle")
+      .attr("font-size",".68rem").attr("font-weight","700")  // a bit larger & bold
       .text(`Peak ₱${peak.net.toFixed(0)} at ≥${peak.t}`);
   rSvg.append("circle").attr("id","roi-cur").attr("r",3).attr("fill","#d32f2f");
 
