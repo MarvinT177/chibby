@@ -9,10 +9,10 @@
 /* ---------- PALETTE ---------- */
 :root{
   --card-grad:#b2d1e7;
-  --btn-main:#5388ad;
+  --btn-main:#376e96;
   --btn-hover:#1d5a86;
   --accent:#7eabcc;
-  --heading:#ffffff;          /* white heading for contrast on dark page */
+  --heading:#5388ad;          /* used for axis text & card headings */
   --shadow-sm:0 2px 4px rgba(0,0,0,.08);
   --thin-green:#22ff55;
   --inverse-red:#ff1744;
@@ -23,9 +23,14 @@ body{
   font-family:"Helvetica Neue",Arial,sans-serif;
   margin:0;padding:14px;
   color:#333;font-size:13px;
-  background:#376e96;         /* solid tint */
+  background:#7eabcc;         /* lighter solid tint */
 }
-h1{text-align:center;margin:0 0 10px;font-size:1.15rem;color:var(--heading)}
+h1{
+  text-align:center;
+  margin:0 0 10px;
+  font-size:1.15rem;
+  color:#ffffff;              /* white headline on blue background */
+}
 #dashboard{display:flex;gap:14px;justify-content:center;align-items:flex-start;flex-wrap:wrap}
 #left-col,#right-col{display:flex;flex-direction:column;gap:12px}
 #center-col{display:flex;flex-direction:column;align-items:center;gap:12px}
@@ -38,7 +43,7 @@ h1{text-align:center;margin:0 0 10px;font-size:1.15rem;color:var(--heading)}
   border-radius:8px;box-shadow:0 6px 14px rgba(0,0,0,.12);
   padding:6px 10px;text-align:center;min-width:140px
 }
-.metric-box h3{margin:0 0 3px;font-size:.72rem;color:#5388ad}
+.metric-box h3{margin:0 0 3px;font-size:.72rem;color:var(--heading)}
 .metric-box span{font-size:1.05rem;font-weight:600}
 
 .sub-metrics{display:flex;gap:6px;margin-top:3px;justify-content:center;flex-wrap:wrap}
@@ -79,7 +84,7 @@ svg#scatter{
 /* grid & axis accents */
 svg#scatter g.tick line,
 svg#scatter path.domain{stroke:var(--accent);stroke-opacity:.35}
-svg#scatter>text{fill:#5388ad}
+svg#scatter>text{fill:var(--heading)}
 
 /* halo animations */
 @keyframes pulseG{0%{r:14;opacity:.8}50%{r:26;opacity:0}100%{r:14;opacity:.8}}
@@ -133,6 +138,7 @@ svg#scatter>text{fill:#5388ad}
 const REV=2500,LGD=6500,AVG_LOAN=75000,CSV="data.csv";
 const RAD=10,FADE=.25,BASE=.70;
 
+/* ---------- SCALES ---------- */
 const svg=d3.select("#scatter"),W=+svg.attr("width"),H=+svg.attr("height"),
       M={top:38,right:40,bottom:60,left:80};
 
@@ -160,22 +166,22 @@ d3.csv(CSV,d3.autoType).then(raw=>{
   svg.append("g").attr("transform",`translate(${M.left},0)`).call(d3.axisLeft(y).ticks(10).tickFormat(d=>11-d));
 
   svg.append("text").attr("x",W/2).attr("y",H-M.bottom+42).attr("text-anchor","middle")
-      .attr("font-size",".8rem").attr("font-weight","bold").attr("fill", "#ffffff")
+      .attr("font-size",".8rem").attr("font-weight","bold").attr("fill",varHeading)
       .text("FinScore Telco Score");
   svg.append("text").attr("x",-H/2).attr("y",M.left-60).attr("transform","rotate(-90)").attr("text-anchor","middle")
-      .attr("font-size",".8rem").attr("font-weight","bold").attr("fill","#ffffff")
+      .attr("font-size",".8rem").attr("font-weight","bold").attr("fill",varHeading)
       .text("Bank Internal Score");
+  function varHeading(){return "#5388ad";}
 
   /* --- BUBBLES --- */
   const g=svg.append("g");
   g.selectAll("circle").data(data).join("circle")
     .attr("cx",d=>x(d.telco)).attr("cy",d=>y(d.bank)).attr("r",RAD)
-    .attr("fill",d=>colour(d.bad))
-    .attr("stroke","#376e96").attr("stroke-width",.6);
+    .attr("fill",d=>colour(d.bad)).attr("stroke","#376e96").attr("stroke-width",.6);
 
   g.selectAll("text").data(data).join("text")
     .attr("x",d=>x(d.telco)).attr("y",d=>y(d.bank)).attr("dy",".35em").attr("text-anchor","middle")
-    .attr("font-size",".58rem").attr("font-weight","600").text(d=>d3.format(".0%")(d.bad)).attr("fill","#000");
+    .attr("font-size",".58rem").attr("font-weight","600").text(d=>d3.format(".0%")(d.bad));
 
   /* --- TOOLTIP --- */
   const tip=d3.select("body").append("div").style("position","absolute").style("pointer-events","none")
@@ -204,7 +210,7 @@ d3.csv(CSV,d3.autoType).then(raw=>{
 
   rSvg.append("circle").attr("id","roi-cur").attr("r",3).attr("fill","#d32f2f");
 
-  /* --- DOM REFS & STATE --- */
+  /* --- DOM & STATE --- */
   const slider=d3.select("#threshold"),thVal=d3.select("#thresh-val"),
         accSp=d3.select("#acc-rate"),defSp=d3.select("#def-rate"),
         accBSp=d3.select("#acc-bank"),defBSp=d3.select("#def-bank"),
