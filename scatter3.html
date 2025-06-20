@@ -12,51 +12,30 @@
   --btn-main:#376e96;
   --btn-hover:#1d5a86;
   --accent:#7eabcc;
-  --heading:#ffffff;          /* white headline on blue background */
+  --headline:#ffffff;
   --shadow-sm:0 2px 4px rgba(0,0,0,.08);
-  --thin-green:#22ff55;
+  --thin-green:#0c9a3f;  /* darker for legibility */
   --inverse-red:#ff1744;
 }
 
-/* ---------- PAGE BASICS (SOLID TINT) ---------- */
-body{
-  font-family:"Helvetica Neue",Arial,sans-serif;
-  margin:0;padding:14px;
-  color:#333;font-size:13px;
-  background:#5388ad;         /* lighter solid tint */
-}
-h1{text-align:center;margin:0 0 10px;font-size:1.15rem;color:var(--heading)}
+/* ---------- PAGE BASICS ---------- */
+body{font-family:"Helvetica Neue",Arial,sans-serif;margin:0;padding:14px;color:#333;font-size:13px;background:#7eabcc;}
+h1{text-align:center;margin:0 0 10px;font-size:1.15rem;color:var(--headline)}
 
 /* ---------- FADED BACKGROUND LOGO ---------- */
-#bg-logo{
-  position:fixed;
-  top:50%; left:50%;
-  transform:translate(-50%,-50%);
-  width:1020px;        /* tweak size here */
-  opacity:0.20;       /* tweak fade here */
-  pointer-events:none;
-  z-index:0;
-}
+#bg-logo{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:520px;opacity:.08;pointer-events:none;z-index:0}
 
-/* ---------- DASHBOARD LAYOUT ---------- */
-#dashboard{
-  position:relative; z-index:1;   /* keep above logo */
-  display:flex;gap:14px;justify-content:center;align-items:flex-start;flex-wrap:wrap
-}
+/* ---------- DASHBOARD ---------- */
+#dashboard{position:relative;z-index:1;display:flex;gap:14px;justify-content:center;align-items:flex-start;flex-wrap:wrap}
 #left-col,#right-col{display:flex;flex-direction:column;gap:12px}
 #center-col{display:flex;flex-direction:column;align-items:center;gap:12px}
 @media(max-width:900px){#dashboard{flex-direction:column;align-items:center}}
 
 /* ---------- CARDS ---------- */
-.metric-box{
-  background:linear-gradient(180deg,#ffffff 0%,var(--card-grad) 100%);
-  border:1px solid rgba(0,0,0,.06);
-  border-radius:8px;box-shadow:0 6px 14px rgba(0,0,0,.12);
-  padding:6px 10px;text-align:center;min-width:140px
-}
+.metric-box{background:linear-gradient(180deg,#ffffff 0%,var(--card-grad) 100%);border:1px solid rgba(0,0,0,.06);
+            border-radius:8px;box-shadow:0 6px 14px rgba(0,0,0,.12);padding:6px 10px;text-align:center;min-width:140px}
 .metric-box h3{margin:0 0 3px;font-size:.72rem;color:#5388ad}
 .metric-box span{font-size:1.05rem;font-weight:600}
-
 .sub-metrics{display:flex;gap:6px;margin-top:3px;justify-content:center;flex-wrap:wrap}
 .sub-box{background:#f6f7f9;border-radius:6px;padding:4px 4px;min-width:64px;box-shadow:var(--shadow-sm)}
 .sub-box h4{margin:0;font-size:.55rem;font-weight:600;color:#555;text-align:center}
@@ -80,22 +59,16 @@ input[type=range]{-webkit-appearance:none;width:150px;height:4px;background:var(
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;
                                         background:var(--btn-main);border:2px solid #fff;
                                         box-shadow:0 0 0 1px var(--btn-hover), var(--shadow-sm);cursor:pointer}
-input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;
-                                    background:var(--btn-main);border:2px solid #fff;
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--btn-main);border:2px solid #fff;
                                     box-shadow:0 0 0 1px var(--btn-hover), var(--shadow-sm);cursor:pointer}
 
 /* ---------- CHART & ROI PANEL ---------- */
-svg#scatter{
-  background:radial-gradient(800px at 60% 35%, #eaf3ff 0%, #ffffff 65%);
-  border-radius:10px;
-  box-shadow:0 4px 12px rgba(0,0,0,.1)
-}
+svg#scatter{background:radial-gradient(800px at 60% 35%,#eaf3ff 0%,#ffffff 65%);border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
 #roi-box{background:#fff;border-radius:8px;padding:6px 10px;box-shadow:0 6px 14px rgba(0,0,0,.12);text-align:center;min-width:140px}
 #roi-chart svg{overflow:visible}
 
-/* grid & axis accents */
-svg#scatter g.tick line,
-svg#scatter path.domain{stroke:var(--accent);stroke-opacity:.35}
+/* grid accents */
+svg#scatter g.tick line,svg#scatter path.domain{stroke:var(--accent);stroke-opacity:.35}
 svg#scatter>text{fill:#5388ad}
 
 /* halo animations */
@@ -105,7 +78,7 @@ svg#scatter>text{fill:#5388ad}
 </head>
 <body>
 <!-- BACKGROUND LOGO -->
-<img src="https://www.finscore.ph/wp-content/uploads/2020/03/cropped-FS-LOGO_ORIGINAL-HORIZONTAL-cropped.png" id="bg-logo" alt="Company logo">
+<img id="bg-logo" src="logo.png" alt="Company logo">
 
 <h1>Proof of Concept, Proven Value</h1>
 
@@ -186,29 +159,37 @@ d3.csv(CSV,d3.autoType).then(raw=>{
       .attr("font-size",".8rem").attr("font-weight","bold").attr("fill","#5388ad")
       .text("Bank Internal Score");
 
-  /* --- BUBBLES --- */
+  /* --- BUBBLES + HIGHLIGHT OVERLAY --- */
   const g=svg.append("g");
-  g.selectAll("circle").data(data).join("circle")
-    .attr("cx",d=>x(d.telco)).attr("cy",d=>y(d.bank)).attr("r",RAD)
-    .attr("fill",d=>colour(d.bad)).attr("stroke","#376e96").attr("stroke-width",.6);
 
-  g.selectAll("text").data(data).join("text")
-    .attr("x",d=>x(d.telco)).attr("y",d=>y(d.bank)).attr("dy",".35em").attr("text-anchor","middle")
-    .attr("font-size",".58rem").attr("font-weight","600").text(d=>d3.format(".0%")(d.bad));
+  const nodes=g.selectAll("g.pt").data(data).join("g").attr("class","pt")
+               .attr("transform",d=>`translate(${x(d.telco)},${y(d.bank)})`);
+
+  nodes.append("circle")
+       .attr("r",RAD).attr("fill",d=>colour(d.bad)).attr("stroke","#376e96").attr("stroke-width",.6);
+
+  /* glossy highlight  */
+  nodes.append("circle")
+       .attr("r",RAD*0.45).attr("cx",-RAD/3).attr("cy",-RAD/3)
+       .attr("fill","#ffffff").attr("opacity",0.25).attr("pointer-events","none");
+
+  /* percentage labels */
+  nodes.append("text")
+       .attr("dy",".35em").attr("text-anchor","middle").attr("font-size",".58rem").attr("font-weight","600")
+       .text(d=>d3.format(".0%")(d.bad));
 
   /* --- TOOLTIP --- */
   const tip=d3.select("body").append("div").style("position","absolute").style("pointer-events","none")
       .style("background","#fff").style("border","1px solid #ccc").style("padding","4px 7px")
       .style("border-radius","6px").style("box-shadow","0 2px 6px rgba(0,0,0,.08)").style("font-size",".65rem").style("opacity",0);
-  g.selectAll("circle")
-    .on("mouseover",(e,d)=>tip.style("opacity",1).html(`T:${d.telco}  B:${d.bank}<br>Pd:${(d.bad*100).toFixed(1)}%  N:${d.n}`))
-    .on("mousemove",e=>tip.style("left",(e.pageX+10)+"px").style("top",(e.pageY-28)+"px"))
-    .on("mouseout",()=>tip.style("opacity",0));
+  nodes.on("mouseover",(e,d)=>tip.style("opacity",1).html(`T:${d.telco}  B:${d.bank}<br>Pd:${(d.bad*100).toFixed(1)}%  N:${d.n}`))
+       .on("mousemove",e=>tip.style("left",(e.pageX+10)+"px").style("top",(e.pageY-28)+"px"))
+       .on("mouseout",()=>tip.style("opacity",0));
 
   /* --- BANK CUTOFF LINE --- */
   const cut=svg.append("line").attr("x1",M.left).attr("x2",W-M.right).attr("stroke","#000").attr("stroke-dasharray","4 4");
 
-  /* --- ROI MINI-CHART (area fill) --- */
+  /* --- ROI MINI CHART (area fill) --- */
   const roi=d3.range(1,11).map(t=>{const s=stats(d=>d.comb>=t);return{t,net:(REV-(s.pd*LGD))*s.acc}}),
         rx=d3.scaleLinear().domain([1,10]).range([0,120]),
         ry=d3.scaleLinear().domain([0,d3.max(roi,d=>d.net)]).range([80,0]);
@@ -217,13 +198,11 @@ d3.csv(CSV,d3.autoType).then(raw=>{
 
   rSvg.append("path").datum(roi).attr("fill","rgba(126,171,204,.25)")
       .attr("d",d3.area().x(d=>rx(d.t)).y0(ry(0)).y1(d=>ry(d.net)));
-
   rSvg.append("path").datum(roi).attr("fill","none").attr("stroke","#1976d2").attr("stroke-width",1.4)
       .attr("d",d3.line().x(d=>rx(d.t)).y(d=>ry(d.net)));
-
   rSvg.append("circle").attr("id","roi-cur").attr("r",3).attr("fill","#d32f2f");
 
-  /* --- DOM & STATE --- */
+  /* --- DOM REFS & STATE --- */
   const slider=d3.select("#threshold"),thVal=d3.select("#thresh-val"),
         accSp=d3.select("#acc-rate"),defSp=d3.select("#def-rate"),
         accBSp=d3.select("#acc-bank"),defBSp=d3.select("#def-bank"),
@@ -262,11 +241,10 @@ d3.csv(CSV,d3.autoType).then(raw=>{
     thinGainSp.text(d3.sum(data.filter(d=>d.bank>=8&&d.telco>=6&&keep(d)&&!bank(d)),d=>d.n));
     thinInvSp .text(d3.sum(data.filter(d=>bank(d)&&!keep(d)),d=>d.n));
 
-    g.selectAll("circle").attr("opacity",d=>keep(d)?1:FADE);
-    g.selectAll("text").attr("opacity",d=>keep(d)?1:FADE);
+    nodes.attr("opacity",d=>keep(d)?1:FADE);
+    cut.attr("y1",y(11-t)).attr("y2",y(11-t));
 
     rSvg.select("#roi-cur").attr("cx",rx(t)).attr("cy",ry((REV-(sC.pd*LGD))*sC.acc));
-    cut.attr("y1",y(11-t)).attr("y2",y(11-t));
     renderHalos(t);
   }
 
