@@ -182,7 +182,12 @@ d3.csv(CSV,d3.autoType).then(raw=>{
   const tip=d3.select("body").append("div").style("position","absolute").style("z-index","9999").style("pointer-events","none")
       .style("background","#fff").style("border","1px solid #ccc").style("padding","4px 7px")
       .style("border-radius","6px").style("box-shadow","0 2px 6px rgba(0,0,0,.08)").style("font-size",".65rem").style("opacity",0);
-  nodes.on("mouseover",(e,d)=>tip.style("opacity",1).html(`T:${d.telco}  B:${d.bank}<br>Pd:${(d.bad*100).toFixed(1)}%  N:${d.n}`))
+  nodes.on("mouseover",(e,d)=>tip.style("opacity",1).html(
+    `<strong>Telco Score:</strong> ${d.telco}<br>
+     <strong>Bank Score:</strong> ${d.bank}<br>
+     <strong>Default Rate:</strong> ${(d.bad*100).toFixed(1)}%<br>
+     <strong>Applicants:</strong> ${d.n}`
+  )
        .on("mousemove",e=>tip.style("left",(e.pageX+10)+"px").style("top",(e.pageY-28)+"px"))
        .on("mouseout",()=>tip.style("opacity",0));
 
