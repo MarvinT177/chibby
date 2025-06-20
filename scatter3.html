@@ -18,8 +18,13 @@
   --inverse-red:#ff1744;
 }
 
-/* ---------- PAGE BASICS ---------- */
-body{font-family:"Helvetica Neue",Arial,sans-serif;background:#f5f5f5;margin:0;padding:14px;color:#333;font-size:13px}
+/* ---------- PAGE BASICS (UPDATED BACKGROUND) ---------- */
+body{
+  font-family:"Helvetica Neue",Arial,sans-serif;
+  margin:0;padding:14px;
+  color:#333;font-size:13px;
+  background:linear-gradient(180deg,#eaf3ff 0%,#ffffff 70%);
+}
 h1{text-align:center;margin:0 0 10px;font-size:1.15rem;color:var(--heading)}
 #dashboard{display:flex;gap:14px;justify-content:center;align-items:flex-start;flex-wrap:wrap}
 #left-col,#right-col{display:flex;flex-direction:column;gap:12px}
@@ -85,6 +90,7 @@ svg#scatter>text{fill:var(--heading)}
 <body>
 <h1>Proof of Concept, Proven Value</h1>
 
+<!-- DASHBOARD -->
 <div id="dashboard">
   <!-- LEFT -->
   <div id="left-col">
@@ -128,7 +134,6 @@ svg#scatter>text{fill:var(--heading)}
 const REV=2500,LGD=6500,AVG_LOAN=75000,CSV="data.csv";
 const RAD=10,FADE=.25,BASE=.70;
 
-/* ---------- SCALES ---------- */
 const svg=d3.select("#scatter"),W=+svg.attr("width"),H=+svg.attr("height"),
       M={top:38,right:40,bottom:60,left:80};
 
