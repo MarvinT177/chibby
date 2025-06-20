@@ -6,17 +6,25 @@
 <title>Proof of Concept, Proven Value</title>
 <script src="d3.v7.min.js"></script>
 <style>
-/* ---------- SAME CSS AS LAST VERSION ---------- */
+/* ----- COLOUR PALETTE STEP 1 ----- */
 :root{
-  --card-grad:#b2d1e7;        /* gradient light blue */
-  --btn-main:#376e96;         /* button normal */
-  --btn-hover:#1d5a86;        /* button hover  */
+  --card-grad:#b2d1e7;        /* light blue (cards)   */
+  --btn-main:#376e96;         /* button normal        */
+  --btn-hover:#1d5a86;        /* button hover         */
   --shadow-sm:0 2px 4px rgba(0,0,0,.08);
   --thin-green:#22ff55;
   --inverse-red:#ff1744;
 }
 
-/* card depth */
+/* ---------- PAGE BASICS ---------- */
+body{font-family:"Helvetica Neue",Arial,sans-serif;background:#f5f5f5;margin:0;padding:14px;color:#333;font-size:13px}
+h1{text-align:center;margin:0 0 10px;font-size:1.15rem}
+#dashboard{display:flex;gap:14px;justify-content:center;align-items:flex-start;flex-wrap:wrap}
+#left-col,#right-col{display:flex;flex-direction:column;gap:12px}
+#center-col{display:flex;flex-direction:column;align-items:center;gap:12px}
+@media(max-width:900px){#dashboard{flex-direction:column;align-items:center}}
+
+/* ---------- CARD DEPTH (updated) ---------- */
 .metric-box{
   background:linear-gradient(180deg,#ffffff 0%,var(--card-grad) 100%);
   border:1px solid rgba(0,0,0,.06);
@@ -26,22 +34,47 @@
   text-align:center;
   min-width:140px;
 }
+.metric-box h3{margin:0 0 3px;font-size:.72rem;color:#666}
+.metric-box span{font-size:1.05rem;font-weight:600}
 
-/* buttons (Play / Hide-Highlight) */
+/* sub metrics */
+.sub-metrics{display:flex;gap:6px;margin-top:3px;justify-content:center;flex-wrap:wrap}
+.sub-box{background:#f6f7f9;border-radius:6px;padding:4px 4px;min-width:64px;box-shadow:var(--shadow-sm)}
+.sub-box h4{margin:0;font-size:.55rem;font-weight:600;color:#555;text-align:center}
+.sub-box span{font-size:.7rem;font-weight:600}
+
+/* thin-file pills */
+#thin-wrap{display:flex;flex-direction:column;align-items:center;gap:3px;margin-top:2px}
+.num-pill{background:#f6f7f9;border-radius:6px;padding:2px 8px;min-width:60px;text-align:center}
+.thin-num{color:var(--thin-green);font-weight:600}
+.inverse-num{color:var(--inverse-red);font-weight:600}
+
+/* ---------- BUTTONS (updated colours) ---------- */
 button{
   background:var(--btn-main);
   color:#fff;border:none;border-radius:6px;
-  padding:3px 10px;font-size:.7rem;cursor:pointer;box-shadow:var(--shadow-sm);
+  padding:3px 10px;font-size:.7rem;cursor:pointer;
+  box-shadow:var(--shadow-sm)
 }
 button:hover{background:var(--btn-hover)}
-/* thin-file button when active keeps its green state */
 #thin-toggle.active{background:var(--thin-green);color:#000}
 
-/* slider thumb colour tweaks */
-input[type=range]::-webkit-slider-thumb,
-input[type=range]::-moz-range-thumb{
-  background:var(--btn-main);
-}
+/* slider / controls */
+#controls{display:flex;gap:10px;align-items:center;background:#fff;border:1px solid #d5d5d5;
+          border-radius:8px;box-shadow:var(--shadow-sm);padding:5px 12px;font-size:.7rem}
+input[type=range]{-webkit-appearance:none;width:150px;height:4px;background:#d0d0d0;border-radius:3px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;
+                                        background:var(--btn-main);border:2px solid #fff;cursor:pointer;box-shadow:var(--shadow-sm)}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--btn-main);border:2px solid #fff;cursor:pointer;box-shadow:var(--shadow-sm)}
+
+/* chart + ROI */
+svg#scatter{background:linear-gradient(160deg,#e9f4ff 0%,#ffffff 70%);border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
+#roi-box{background:#fff;border-radius:8px;padding:6px 10px;box-shadow:0 6px 14px rgba(0,0,0,.12);text-align:center;min-width:140px}
+#roi-chart svg{overflow:visible}
+
+/* halo animations */
+@keyframes pulseG{0%{r:14;opacity:.8}50%{r:26;opacity:0}100%{r:14;opacity:.8}}
+@keyframes pulseR{0%{r:14;opacity:.45}50%{r:26;opacity:0}100%{r:14;opacity:.45}}
 </style>
 </head>
 <body>
@@ -86,7 +119,10 @@ input[type=range]::-moz-range-thumb{
 </div>
 
 <script>
+/* ---------- CONFIG ---------- */
 const REV=2500,LGD=6500,AVG_LOAN=75000,CSV="data.csv",RAD=10,FADE=.25,BASE=.70;
+
+/* ---------- SCALES ---------- */
 const svg=d3.select("#scatter"),W=+svg.attr("width"),H=+svg.attr("height"),
       M={top:38,right:40,bottom:60,left:80},
       x=d3.scaleLinear().domain([1,10]).range([M.left+RAD,W-M.right-RAD]),
@@ -95,6 +131,7 @@ const svg=d3.select("#scatter"),W=+svg.attr("width"),H=+svg.attr("height"),
              .range(["#9CCC65","#D4E157","#FFEE58","#FFCA28","#FFA726","#FF7043"]);
 
 d3.csv(CSV,d3.autoType).then(raw=>{
+  /* ----- DATA ----- */
   const rows=raw.filter(r=>!Object.values(r).some(v=>v==="#N/A"||v===null));
   const data=d3.rollups(rows,
       v=>({telco:+v[0]["FinScore Telco"],bank:+v[0]["Bank Internal Score"],comb:+v[0]["Combined Score"],
@@ -105,16 +142,15 @@ d3.csv(CSV,d3.autoType).then(raw=>{
         stats=f=>{const s=data.filter(f),n=d3.sum(s,d=>d.n);return{acc:n/totalApps,pd:n?d3.sum(s,d=>d.n*d.bad)/n:0}},
         bankBase=stats(d=>d.bank<=10);
 
-  /* axes */
+  /* ----- AXES ----- */
   svg.append("g").attr("transform",`translate(0,${H-M.bottom})`).call(d3.axisBottom(x).ticks(10));
   svg.append("g").attr("transform",`translate(${M.left},0)`).call(d3.axisLeft(y).ticks(10).tickFormat(d=>11-d));
-
   svg.append("text").attr("x",W/2).attr("y",H-M.bottom+42).attr("text-anchor","middle").attr("font-size",".8rem").attr("font-weight","bold")
       .text("FinScore Telco Score");
   svg.append("text").attr("x",-H/2).attr("y",M.left-60).attr("transform","rotate(-90)").attr("text-anchor","middle")
       .attr("font-size",".8rem").attr("font-weight","bold").text("Bank Internal Score");
 
-  /* points */
+  /* ----- POINTS ----- */
   const g=svg.append("g");
   g.selectAll("circle").data(data).join("circle")
     .attr("cx",d=>x(d.telco)).attr("cy",d=>y(d.bank)).attr("r",RAD).attr("fill",d=>colour(d.bad)).attr("stroke","#333").attr("stroke-width",.4);
@@ -122,18 +158,20 @@ d3.csv(CSV,d3.autoType).then(raw=>{
     .attr("x",d=>x(d.telco)).attr("y",d=>y(d.bank)).attr("dy",".35em").attr("text-anchor","middle")
     .attr("font-size",".58rem").attr("font-weight","600").text(d=>d3.format(".0%")(d.bad));
 
-  /* tooltip */
+  /* ----- TOOLTIP ----- */
   const tip=d3.select("body").append("div").style("position","absolute").style("pointer-events","none")
-      .style("background","#fff").style("border","1px solid #ccc").style("padding","4px 7px").style("border-radius","6px")
-      .style("box-shadow","0 2px 6px rgba(0,0,0,.08)").style("font-size",".65rem").style("opacity",0);
+      .style("background","#fff").style("border","1px solid #ccc").style("padding","4px 7px")
+      .style("border-radius","6px").style("box-shadow","0 2px 6px rgba(0,0,0,.08)").style("font-size",".65rem").style("opacity",0);
   g.selectAll("circle")
     .on("mouseover",(e,d)=>tip.style("opacity",1).html(`T:${d.telco} B:${d.bank}<br>Pd:${(d.bad*100).toFixed(1)}% N:${d.n}`))
     .on("mousemove",e=>tip.style("left",(e.pageX+10)+"px").style("top",(e.pageY-28)+"px"))
     .on("mouseout",()=>tip.style("opacity",0));
 
+  /* ----- BANK CUT LINE & ROI ----- */
   const cut=svg.append("line").attr("x1",M.left).attr("x2",W-M.right).attr("stroke","#000").attr("stroke-dasharray","4 4");
   const roi=d3.range(1,11).map(t=>{const s=stats(d=>d.comb>=t);return{t,net:(REV-(s.pd*LGD))*s.acc}}),
-        rx=d3.scaleLinear().domain([1,10]).range([0,120]),ry=d3.scaleLinear().domain([0,d3.max(roi,d=>d.net)]).range([80,0]);
+        rx=d3.scaleLinear().domain([1,10]).range([0,120]),
+        ry=d3.scaleLinear().domain([0,d3.max(roi,d=>d.net)]).range([80,0]);
   const rSvg=d3.select("#roi-chart").append("svg").attr("width",140).attr("height",90);
   rSvg.append("path").datum(roi).attr("fill","none").attr("stroke","#1976d2").attr("stroke-width",1.4)
       .attr("d",d3.line().x(d=>rx(d.t)).y(d=>ry(d.net)));
@@ -141,7 +179,8 @@ d3.csv(CSV,d3.autoType).then(raw=>{
 
   /* DOM refs */
   const S=d3.select("#threshold"),TH=d3.select("#thresh-val"),
-        ACC=d3.select("#acc-rate"),DEF=d3.select("#def-rate"),ACCB=d3.select("#acc-bank"),DEFB=d3.select("#def-bank"),
+        ACC=d3.select("#acc-rate"),DEF=d3.select("#def-rate"),
+        ACCB=d3.select("#acc-bank"),DEFB=d3.select("#def-bank"),
         NET=d3.select("#benefit-loan"),SAVE=d3.select("#benefit-save"),
         GAIN=d3.select("#thin-count"),LOSS=d3.select("#inverse-count"),
         haloBtn=d3.select("#thin-toggle"),halosG=svg.append("g"),halosR=svg.append("g"); let haloOn=false;
@@ -156,7 +195,6 @@ d3.csv(CSV,d3.autoType).then(raw=>{
       .attr("stroke","var(--inverse-red)").attr("stroke-width",1.6).style("animation","pulseR 1.4s ease-out infinite");
   }
 
-  /* ---------- UPDATE (GAIN/LOSS now sum applicant counts) ---------- */
   function update(t){
     TH.text(t);
     const keep=d=>d.comb>=t, bank=d=>d.bank<=11-t, sC=stats(keep), sB=stats(bank);
@@ -165,7 +203,7 @@ d3.csv(CSV,d3.autoType).then(raw=>{
     NET.text("₱"+(REV-(sC.pd*LGD)).toFixed(0));
     SAVE.text("₱"+((bankBase.pd*bankBase.acc - sC.pd*sC.acc)*AVG_LOAN).toFixed(0));
 
-    /* NEW: applicant totals */
+    /* applicant totals */
     GAIN.text(d3.sum(data.filter(d=>d.bank>=8&&d.telco>=6&&keep(d)&&!bank(d)),d=>d.n));
     LOSS.text(d3.sum(data.filter(d=>bank(d)&&!keep(d)),d=>d.n));
 
@@ -186,13 +224,12 @@ d3.csv(CSV,d3.autoType).then(raw=>{
     timer=setInterval(()=>{let v=+S.node().value;v=v<10?v+1:1;S.node().value=v;update(v)},1600);
   });
 
-  haloBtn.on("click",function(){
-    haloOn=!haloOn;haloBtn.classed("active",haloOn).text(haloOn?"Hide":"Highlight");update(+S.node().value);
-  });
+  haloBtn.on("click",function(){haloOn=!haloOn;haloBtn.classed("active",haloOn).text(haloOn?"Hide":"Highlight");update(+S.node().value);});
 });
 </script>
 </body>
 </html>
+
 
 
 
