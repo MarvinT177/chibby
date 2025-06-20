@@ -18,12 +18,12 @@
   --inverse-red:#ff1744;
 }
 
-/* ---------- PAGE BASICS (UPDATED BACKGROUND) ---------- */
+/* ---------- PAGE BASICS (RADIAL GLOW) ---------- */
 body{
   font-family:"Helvetica Neue",Arial,sans-serif;
   margin:0;padding:14px;
   color:#333;font-size:13px;
-  background:linear-gradient(180deg,#eaf3ff 0%,#ffffff 70%);
+  background:radial-gradient(1000px at 50% 0,#376e96 0%,#ffffff 75%);
 }
 h1{text-align:center;margin:0 0 10px;font-size:1.15rem;color:var(--heading)}
 #dashboard{display:flex;gap:14px;justify-content:center;align-items:flex-start;flex-wrap:wrap}
@@ -36,7 +36,7 @@ h1{text-align:center;margin:0 0 10px;font-size:1.15rem;color:var(--heading)}
   background:linear-gradient(180deg,#ffffff 0%,var(--card-grad) 100%);
   border:1px solid rgba(0,0,0,.06);
   border-radius:8px;box-shadow:0 6px 14px rgba(0,0,0,.12);
-  padding:6px 10px;text-align:center;min-width:140px
+  padding:6px 10px;text-align:center;min-width:140px;
 }
 .metric-box h3{margin:0 0 3px;font-size:.72rem;color:var(--heading)}
 .metric-box span{font-size:1.05rem;font-weight:600}
@@ -64,9 +64,8 @@ input[type=range]{-webkit-appearance:none;width:150px;height:4px;background:var(
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;
                                         background:var(--btn-main);border:2px solid #fff;
                                         box-shadow:0 0 0 1px var(--btn-hover), var(--shadow-sm);cursor:pointer}
-input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;
-                                    background:var(--btn-main);border:2px solid #fff;
-                                    box-shadow:0 0 0 1px var(--btn-hover), var(--shadow-sm);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--btn-main);
+                                    border:2px solid #fff;box-shadow:0 0 0 1px var(--btn-hover), var(--shadow-sm);cursor:pointer}
 
 /* ---------- CHART & ROI PANEL ---------- */
 svg#scatter{
@@ -181,7 +180,7 @@ d3.csv(CSV,d3.autoType).then(raw=>{
       .style("background","#fff").style("border","1px solid #ccc").style("padding","4px 7px")
       .style("border-radius","6px").style("box-shadow","0 2px 6px rgba(0,0,0,.08)").style("font-size",".65rem").style("opacity",0);
   g.selectAll("circle")
-    .on("mouseover",(e,d)=>tip.style("opacity",1).html(`T:${d.telco} B:${d.bank}<br>Pd:${(d.bad*100).toFixed(1)}% N:${d.n}`))
+    .on("mouseover",(e,d)=>tip.style("opacity",1).html(`T:${d.telco}  B:${d.bank}<br>Pd:${(d.bad*100).toFixed(1)}%  N:${d.n}`))
     .on("mousemove",e=>tip.style("left",(e.pageX+10)+"px").style("top",(e.pageY-28)+"px"))
     .on("mouseout",()=>tip.style("opacity",0));
 
@@ -276,6 +275,7 @@ d3.csv(CSV,d3.autoType).then(raw=>{
 </script>
 </body>
 </html>
+
 
 
 
