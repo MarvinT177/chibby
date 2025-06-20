@@ -12,18 +12,18 @@
   --btn-main:#376e96;
   --btn-hover:#1d5a86;
   --accent:#7eabcc;
-  --heading:#5388ad;
+  --heading:#ffffff;          /* white heading for contrast on dark page */
   --shadow-sm:0 2px 4px rgba(0,0,0,.08);
   --thin-green:#22ff55;
   --inverse-red:#ff1744;
 }
 
-/* ---------- PAGE BASICS (RADIAL GLOW) ---------- */
+/* ---------- PAGE BASICS (SOLID TINT) ---------- */
 body{
   font-family:"Helvetica Neue",Arial,sans-serif;
   margin:0;padding:14px;
   color:#333;font-size:13px;
-  background:radial-gradient(1000px at 50% 0,#376e96 0%,#ffffff 75%);
+  background:#376e96;         /* solid tint */
 }
 h1{text-align:center;margin:0 0 10px;font-size:1.15rem;color:var(--heading)}
 #dashboard{display:flex;gap:14px;justify-content:center;align-items:flex-start;flex-wrap:wrap}
@@ -36,9 +36,9 @@ h1{text-align:center;margin:0 0 10px;font-size:1.15rem;color:var(--heading)}
   background:linear-gradient(180deg,#ffffff 0%,var(--card-grad) 100%);
   border:1px solid rgba(0,0,0,.06);
   border-radius:8px;box-shadow:0 6px 14px rgba(0,0,0,.12);
-  padding:6px 10px;text-align:center;min-width:140px;
+  padding:6px 10px;text-align:center;min-width:140px
 }
-.metric-box h3{margin:0 0 3px;font-size:.72rem;color:var(--heading)}
+.metric-box h3{margin:0 0 3px;font-size:.72rem;color:#5388ad}
 .metric-box span{font-size:1.05rem;font-weight:600}
 
 .sub-metrics{display:flex;gap:6px;margin-top:3px;justify-content:center;flex-wrap:wrap}
@@ -79,7 +79,7 @@ svg#scatter{
 /* grid & axis accents */
 svg#scatter g.tick line,
 svg#scatter path.domain{stroke:var(--accent);stroke-opacity:.35}
-svg#scatter>text{fill:var(--heading)}
+svg#scatter>text{fill:#5388ad}
 
 /* halo animations */
 @keyframes pulseG{0%{r:14;opacity:.8}50%{r:26;opacity:0}100%{r:14;opacity:.8}}
@@ -160,9 +160,11 @@ d3.csv(CSV,d3.autoType).then(raw=>{
   svg.append("g").attr("transform",`translate(${M.left},0)`).call(d3.axisLeft(y).ticks(10).tickFormat(d=>11-d));
 
   svg.append("text").attr("x",W/2).attr("y",H-M.bottom+42).attr("text-anchor","middle")
-      .attr("font-size",".8rem").attr("font-weight","bold").text("FinScore Telco Score");
+      .attr("font-size",".8rem").attr("font-weight","bold").attr("fill", "#ffffff")
+      .text("FinScore Telco Score");
   svg.append("text").attr("x",-H/2).attr("y",M.left-60).attr("transform","rotate(-90)").attr("text-anchor","middle")
-      .attr("font-size",".8rem").attr("font-weight","bold").text("Bank Internal Score");
+      .attr("font-size",".8rem").attr("font-weight","bold").attr("fill","#ffffff")
+      .text("Bank Internal Score");
 
   /* --- BUBBLES --- */
   const g=svg.append("g");
@@ -173,7 +175,7 @@ d3.csv(CSV,d3.autoType).then(raw=>{
 
   g.selectAll("text").data(data).join("text")
     .attr("x",d=>x(d.telco)).attr("y",d=>y(d.bank)).attr("dy",".35em").attr("text-anchor","middle")
-    .attr("font-size",".58rem").attr("font-weight","600").text(d=>d3.format(".0%")(d.bad));
+    .attr("font-size",".58rem").attr("font-weight","600").text(d=>d3.format(".0%")(d.bad)).attr("fill","#000");
 
   /* --- TOOLTIP --- */
   const tip=d3.select("body").append("div").style("position","absolute").style("pointer-events","none")
@@ -275,6 +277,7 @@ d3.csv(CSV,d3.autoType).then(raw=>{
 </script>
 </body>
 </html>
+
 
 
 
