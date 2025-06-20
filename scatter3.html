@@ -8,16 +8,16 @@
 <style>
 /* ---------- PALETTE ---------- */
 :root{
-  --card-grad:#b2d1e7;   /* step-1 card gradient */
-  --btn-main:#376e96;    /* button normal  */
-  --btn-hover:#1d5a86;   /* button hover   */
-  --accent:#7eabcc;      /* new accent     */
-  --heading:#5388ad;     /* headings / axis*/
+  --card-grad:#b2d1e7;
+  --btn-main:#376e96;
+  --btn-hover:#1d5a86;
+  --accent:#7eabcc;
+  --heading:#5388ad;
   --shadow-sm:0 2px 4px rgba(0,0,0,.08);
-  --thin-green:#22ff55;--inverse-red:#ff1744;
+  --thin-green:#22ff55;
+  --inverse-red:#ff1744;
 }
-
-/* ---------- PAGE BASICS ---------- */
+/* ---------- PAGE BASICS & PREVIOUS STEPS (unchanged) ---------- */
 body{font-family:"Helvetica Neue",Arial,sans-serif;background:#f5f5f5;margin:0;padding:14px;color:#333;font-size:13px}
 h1{text-align:center;margin:0 0 10px;font-size:1.15rem;color:var(--heading)}
 #dashboard{display:flex;gap:14px;justify-content:center;align-items:flex-start;flex-wrap:wrap}
@@ -25,38 +25,28 @@ h1{text-align:center;margin:0 0 10px;font-size:1.15rem;color:var(--heading)}
 #center-col{display:flex;flex-direction:column;align-items:center;gap:12px}
 @media(max-width:900px){#dashboard{flex-direction:column;align-items:center}}
 
-/* ---------- CARD DEPTH ---------- */
 .metric-box{
   background:linear-gradient(180deg,#ffffff 0%,var(--card-grad) 100%);
-  border:1px solid rgba(0,0,0,.06);
-  border-radius:8px;
-  box-shadow:0 6px 14px rgba(0,0,0,.12);
+  border:1px solid rgba(0,0,0,.06);border-radius:8px;box-shadow:0 6px 14px rgba(0,0,0,.12);
   padding:6px 10px;text-align:center;min-width:140px;
 }
 .metric-box h3{margin:0 0 3px;font-size:.72rem;color:var(--heading)}
 .metric-box span{font-size:1.05rem;font-weight:600}
 
-/* sub-metrics */
 .sub-metrics{display:flex;gap:6px;margin-top:3px;justify-content:center;flex-wrap:wrap}
 .sub-box{background:#f6f7f9;border-radius:6px;padding:4px 4px;min-width:64px;box-shadow:var(--shadow-sm)}
 .sub-box h4{margin:0;font-size:.55rem;font-weight:600;color:#555;text-align:center}
 .sub-box span{font-size:.7rem;font-weight:600}
 
-/* thin-file pills (light accent tint) */
 #thin-wrap{display:flex;flex-direction:column;align-items:center;gap:3px;margin-top:2px}
 .num-pill{background:rgba(126,171,204,.12);border-radius:6px;padding:2px 8px;min-width:60px;text-align:center}
 .thin-num{color:var(--thin-green);font-weight:600}
 .inverse-num{color:var(--inverse-red);font-weight:600}
 
-/* ---------- BUTTONS ---------- */
-button{
-  background:var(--btn-main);color:#fff;border:none;border-radius:6px;
-  padding:3px 10px;font-size:.7rem;cursor:pointer;box-shadow:var(--shadow-sm)
-}
+button{background:var(--btn-main);color:#fff;border:none;border-radius:6px;padding:3px 10px;font-size:.7rem;cursor:pointer;box-shadow:var(--shadow-sm)}
 button:hover{background:var(--btn-hover)}
 #thin-toggle.active{background:var(--thin-green);color:#000}
 
-/* slider & thumb with accent rail */
 #controls{display:flex;gap:10px;align-items:center;background:#fff;border:1px solid #d5d5d5;
           border-radius:8px;box-shadow:var(--shadow-sm);padding:5px 12px;font-size:.7rem}
 input[type=range]{-webkit-appearance:none;width:150px;height:4px;background:var(--accent);border-radius:3px}
@@ -64,18 +54,15 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
                                         background:var(--btn-main);border:2px solid #fff;cursor:pointer;box-shadow:var(--shadow-sm)}
 input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--btn-main);border:2px solid #fff;cursor:pointer;box-shadow:var(--shadow-sm)}
 
-/* chart panel */
 svg#scatter{background:linear-gradient(160deg,#e9f4ff 0%,#ffffff 70%);border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
 #roi-box{background:#fff;border-radius:8px;padding:6px 10px;box-shadow:0 6px 14px rgba(0,0,0,.12);text-align:center;min-width:140px}
 #roi-chart svg{overflow:visible}
 
-/* ---------- ACCENT GRID & AXIS ---------- */
+/* grid & axis accents */
 svg#scatter g.tick line,
 svg#scatter path.domain{stroke:var(--accent);stroke-opacity:.35}
-svg#scatter text{fill:#000}            /* keep bubble % black */
-svg#scatter>text{fill:var(--heading)}  /* top-level axis labels */
+svg#scatter>text{fill:var(--heading)}
 
-/* halo animations */
 @keyframes pulseG{0%{r:14;opacity:.8}50%{r:26;opacity:0}100%{r:14;opacity:.8}}
 @keyframes pulseR{0%{r:14;opacity:.45}50%{r:26;opacity:0}100%{r:14;opacity:.45}}
 </style>
@@ -83,9 +70,6 @@ svg#scatter>text{fill:var(--heading)}  /* top-level axis labels */
 <body>
 <h1>Proof of Concept, Proven Value</h1>
 
-<!-- HTML structure (unchanged from previous working version) -->
-<!-- ... copy of body omitted for brevity but remains identical, including JS ... -->
-<!-- BEGIN DASHBOARD -->
 <div id="dashboard">
   <!-- LEFT -->
   <div id="left-col">
@@ -123,12 +107,8 @@ svg#scatter>text{fill:var(--heading)}  /* top-level axis labels */
     <div class="metric-box" id="roi-box"><h3>ROI Curve</h3><div id="roi-chart"></div></div>
   </div>
 </div>
-<!-- END DASHBOARD -->
 
 <script>
-/* ---------- JS identical to previous working version ---------- */
-/* (functional changes last made: applicant totals for thin-file) */
-
 const REV=2500,LGD=6500,AVG_LOAN=75000,CSV="data.csv",RAD=10,FADE=.25,BASE=.70;
 const svg=d3.select("#scatter"),W=+svg.attr("width"),H=+svg.attr("height"),
       M={top:38,right:40,bottom:60,left:80},
@@ -172,14 +152,30 @@ d3.csv(CSV,d3.autoType).then(raw=>{
     .on("mouseout",()=>tip.style("opacity",0));
 
   const cut=svg.append("line").attr("x1",M.left).attr("x2",W-M.right).attr("stroke","#000").attr("stroke-dasharray","4 4");
+
+  /* ---------- ROI MINI-CHART (added area fill) ---------- */
   const roi=d3.range(1,11).map(t=>{const s=stats(d=>d.comb>=t);return{t,net:(REV-(s.pd*LGD))*s.acc}}),
         rx=d3.scaleLinear().domain([1,10]).range([0,120]),
         ry=d3.scaleLinear().domain([0,d3.max(roi,d=>d.net)]).range([80,0]);
+
   const rSvg=d3.select("#roi-chart").append("svg").attr("width",140).attr("height",90);
+
+  /* light area fill */
+  rSvg.append("path").datum(roi)
+      .attr("fill","rgba(126,171,204,.25)")
+      .attr("d",d3.area()
+            .x(d=>rx(d.t))
+            .y0(ry(0))
+            .y1(d=>ry(d.net)));
+
+  /* blue stroke line */
   rSvg.append("path").datum(roi).attr("fill","none").attr("stroke","#1976d2").attr("stroke-width",1.4)
       .attr("d",d3.line().x(d=>rx(d.t)).y(d=>ry(d.net)));
+
+  /* red moving dot */
   rSvg.append("circle").attr("id","roi-cur").attr("r",3).attr("fill","#d32f2f");
 
+  /* DOM refs */
   const S=d3.select("#threshold"),TH=d3.select("#thresh-val"),
         ACC=d3.select("#acc-rate"),DEF=d3.select("#def-rate"),
         ACCB=d3.select("#acc-bank"),DEFB=d3.select("#def-bank"),
@@ -228,6 +224,7 @@ d3.csv(CSV,d3.autoType).then(raw=>{
 </script>
 </body>
 </html>
+
 
 
 
