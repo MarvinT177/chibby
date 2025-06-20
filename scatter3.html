@@ -5,6 +5,7 @@
 <meta charset="utf-8"/>
 <title>Proof of Concept, Proven Value</title>
 <script src="d3.v7.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
 <style>
 /* ---------- PALETTE ---------- */
 :root{
@@ -20,7 +21,23 @@
 
 /* ---------- PAGE BASICS ---------- */
 body{font-family:"Helvetica Neue",Arial,sans-serif;margin:0;padding:14px;color:#333;font-size:13px;background:#5388ad;}
-h1{text-align:center;margin:0 0 10px;font-size:1.15rem;color:var(--headline)}
+h1{
+  /* type */
+  font-family:'Montserrat',Helvetica,Arial,sans-serif;
+  font-size:1.8rem;
+  font-weight:700;
+  letter-spacing:.5px;
+
+  /* gradient text + soft shadow */
+  background:linear-gradient(90deg,#ffffff 0%,#eaf4ff 50%,#ffffff 100%);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  text-shadow:0 3px 6px rgba(0,0,0,.25);
+
+  /* layout */
+  margin:0 0 14px;
+  text-align:center;
+}
 
 /* ---------- FADED BACKGROUND LOGO ---------- */
 #bg-logo{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:1220px;opacity:.40;pointer-events:none;z-index:0}
@@ -80,7 +97,7 @@ svg#scatter>text{fill:#5388ad}
 <!-- BACKGROUND LOGO -->
 <img id="bg-logo" src="https://www.finscore.ph/wp-content/uploads/2020/03/cropped-FS-LOGO_ORIGINAL-HORIZONTAL-cropped.png" alt="Company logo">
 
-<h1>Proof of Concept, Proven Value</h1>
+<h1> Proof of Concept, Proven Value </h1>
 
 <div id="dashboard">
   <!-- LEFT -->
