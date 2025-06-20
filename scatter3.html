@@ -187,7 +187,7 @@ d3.csv(CSV,d3.autoType).then(raw=>{
      <strong>Bank Score:</strong> ${d.bank}<br>
      <strong>Default Rate:</strong> ${(d.bad*100).toFixed(1)}%<br>
      <strong>Applicants:</strong> ${d.n}`
-  )
+  ))
        .on("mousemove",e=>tip.style("left",(e.pageX+10)+"px").style("top",(e.pageY-28)+"px"))
        .on("mouseout",()=>tip.style("opacity",0));
 
