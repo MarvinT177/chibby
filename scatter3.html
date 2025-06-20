@@ -6,24 +6,47 @@
 <title>Proof of Concept, Proven Value</title>
 <script src="d3.v7.min.js"></script>
 <style>
-body{font-family:Arial,Helvetica,sans-serif;margin:0;padding:16px;background:#f5f5f5;color:#333;font-size:13px}
-h1{text-align:center;margin:0 0 12px;font-size:1.2rem}
-#dashboard{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
-#left,#right{display:flex;flex-direction:column;gap:12px}
-#center{display:flex;flex-direction:column;align-items:center;gap:12px}
-.card{background:#fff;border:1px solid #ddd;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,.1);padding:10px 14px;min-width:150px;text-align:center}
-.card h3{margin:0 0 4px;font-size:.78rem;color:#555}
-.card span{font-size:1.15rem;font-weight:600}
-.sub{display:flex;gap:6px;justify-content:center;margin-top:4px}
-.sub div{background:#f0f3f8;border-radius:6px;padding:4px 6px;min-width:65px}
-.sub h4{margin:0;font-size:.55rem;font-weight:600;color:#555}
-.sub span{font-size:.7rem;font-weight:600}
-#ctrl{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid #ddd;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,.1);padding:6px 14px;font-size:.7rem}
+:root{
+  --card-bg:#fff;--shadow-lg:0 4px 10px rgba(0,0,0,.12);
+  --shadow-sm:0 2px 4px rgba(0,0,0,.08);
+  --thin-green:#22ff55;--inverse-red:#ff1744;
+}
+body{font-family:"Helvetica Neue",Arial,sans-serif;background:#f5f5f5;margin:0;padding:14px;color:#333;font-size:13px}
+h1{text-align:center;margin:0 0 10px;font-size:1.15rem}
+
+#dashboard{display:flex;gap:14px;align-items:flex-start;justify-content:center;flex-wrap:wrap}
+#left-col,#right-col{display:flex;flex-direction:column;gap:12px}
+#center-col{display:flex;flex-direction:column;align-items:center;gap:12px}
+@media(max-width:900px){#dashboard{flex-direction:column;align-items:center}}
+
+.metric-box{background:var(--card-bg);border-radius:8px;padding:6px 10px;box-shadow:var(--shadow-lg);text-align:center;min-width:140px}
+.metric-box h3{margin:0 0 3px;font-size:.72rem;color:#666}
+.metric-box span{font-size:1.05rem;font-weight:600}
+.sub-metrics{display:flex;gap:6px;margin-top:3px;justify-content:center;flex-wrap:wrap}
+.sub-box{background:#f6f7f9;border-radius:6px;padding:4px 4px;min-width:64px;box-shadow:var(--shadow-sm)}
+.sub-box h4{margin:0;font-size:.55rem;font-weight:600;color:#555;text-align:center}
+.sub-box span{font-size:.7rem;font-weight:600}
+
+#thin-wrap{display:flex;flex-direction:column;align-items:center;gap:3px;margin-top:2px}
+.num-pill{background:#f6f7f9;border-radius:6px;padding:2px 8px;display:inline-block;min-width:60px;text-align:center}
+.thin-num{color:var(--thin-green)}
+.inverse-num{color:var(--inverse-red)}
+
+#thin-toggle{margin-top:8px;border:none;border-radius:6px;font-size:.62rem;padding:3px 8px;cursor:pointer;box-shadow:var(--shadow-sm);background:#616161;color:#fff}
+#thin-toggle.active{background:var(--thin-green);color:#000}
+
+#controls{display:flex;gap:10px;align-items:center;background:var(--card-bg);border-radius:8px;box-shadow:var(--shadow-sm);padding:5px 12px;border:1px solid #d5d5d5;font-size:.7rem}
 input[type=range]{-webkit-appearance:none;width:150px;height:4px;background:#d0d0d0;border-radius:3px}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:#616161;border:2px solid #fff;cursor:pointer}
-button{background:#616161;color:#fff;border:none;border-radius:6px;padding:4px 12px;font-size:.73rem;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#616161;border:2px solid #fff;cursor:pointer;box-shadow:var(--shadow-sm)}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#616161;border:2px solid #fff;cursor:pointer;box-shadow:var(--shadow-sm)}
+button{background:#616161;color:#fff;border:none;border-radius:6px;padding:3px 10px;font-size:.7rem;cursor:pointer;box-shadow:var(--shadow-sm)}
 button:hover{background:#424242}
-svg#chart{background:linear-gradient(160deg,#e9f4ff 0%,#ffffff 70%);border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
+
+svg#scatter{background:linear-gradient(160deg,#e9f4ff 0%,#ffffff 70%);border-radius:10px;box-shadow:var(--shadow-lg)}
+#roi-box{background:var(--card-bg);border-radius:8px;padding:6px 10px;box-shadow:var(--shadow-lg);text-align:center;min-width:140px}
+#roi-box h3{margin:0 0 3px;font-size:.72rem;color:#666}
+#roi-chart svg{overflow:visible}
+
 @keyframes pulseG{0%{r:14;opacity:.8}50%{r:26;opacity:0}100%{r:14;opacity:.8}}
 @keyframes pulseR{0%{r:14;opacity:.45}50%{r:26;opacity:0}100%{r:14;opacity:.45}}
 </style>
@@ -32,130 +55,172 @@ svg#chart{background:linear-gradient(160deg,#e9f4ff 0%,#ffffff 70%);border-radiu
 <h1>Proof of Concept, Proven Value</h1>
 
 <div id="dashboard">
-  <!-- left -->
-  <div id="left">
-    <div class="card"><h3>Combined Approval</h3><span id="acc">0%</span>
-      <div class="sub"><div><h4>Bank</h4><span id="accB">0%</span></div></div></div>
-    <div class="card"><h3>Combined Default</h3><span id="def">0%</span>
-      <div class="sub"><div><h4>Bank</h4><span id="defB">0%</span></div></div></div>
-  </div>
-
-  <!-- centre -->
-  <div id="center">
-    <svg id="chart" width="540" height="420"></svg>
-    <div id="ctrl">
-      <label><strong>Score ≥</strong> <span id="th">1</span></label>
-      <input id="slider" type="range" min="1" max="10" step="1" value="1">
-      <button id="play">Play</button>
+  <!-- LEFT -->
+  <div id="left-col">
+    <div class="metric-box">
+      <h3>Combined Approval</h3><span id="acc-rate">0%</span>
+      <div class="sub-metrics"><div class="sub-box"><h4>Bank</h4><span id="acc-bank">0%</span></div></div>
+    </div>
+    <div class="metric-box">
+      <h3>Combined Default</h3><span id="def-rate">0%</span>
+      <div class="sub-metrics"><div class="sub-box"><h4>Bank</h4><span id="def-bank">0%</span></div></div>
     </div>
   </div>
 
-  <!-- right -->
-  <div id="right">
-    <div class="card"><h3>Peso Benefit</h3>
-      <div class="sub">
-        <div><h4>Net / Loan</h4><span id="net">₱0</span></div>
-        <div><h4>Default<br>Savings</h4><span id="save">₱0</span></div>
-      </div></div>
-    <div class="card"><h3>Thin-File Gains</h3>
-      <span id="gain" style="font-weight:600;color:#22ff55">0</span><br>
-      <span id="loss" style="font-weight:600;color:#ff1744">0</span>
-      <button id="halo">Highlight</button></div>
-    <div class="card"><h3>ROI Curve</h3><div id="roi"></div></div>
+  <!-- CENTER -->
+  <div id="center-col">
+    <svg id="scatter" width="540" height="420"></svg>
+    <div id="controls">
+      <label for="threshold"><strong>Score ≥</strong> <span id="thresh-val">1</span></label>
+      <input type="range" id="threshold" min="1" max="10" step="1" value="1">
+      <button id="toggle">Play</button>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div id="right-col">
+    <div class="metric-box">
+      <h3>Peso Benefit</h3>
+      <div class="sub-metrics" style="gap:5px">
+        <div class="sub-box"><h4>Net / Loan</h4><span id="benefit-loan">₱0</span></div>
+        <div class="sub-box"><h4>Default<br>Savings</h4><span id="benefit-save">₱0</span></div>
+      </div>
+    </div>
+
+    <div class="metric-box">
+      <h3>Thin-File Gains</h3>
+      <div id="thin-wrap">
+        <span id="thin-count"   class="num-pill thin-num">0</span>
+        <span id="inverse-count"class="num-pill inverse-num">0</span>
+      </div>
+      <button id="thin-toggle">Highlight</button>
+    </div>
+
+    <div id="roi-box">
+      <h3>ROI Curve</h3><div id="roi-chart"></div>
+    </div>
   </div>
 </div>
 
 <script>
-/* ---------- config ---------- */
-const CSV="data.csv",REV=2500,LGD=6500,AVG=75000,R=10,FADE=.25,BASE=.70;
-const svg=d3.select("#chart"),W=+svg.attr("width"),H=+svg.attr("height"),
+/* ---------- CONFIG ---------- */
+const REV=2500,LGD=6500,AVG_LOAN=75000,CSV="data.csv",RAD=10,FADE=.25,BASE=.70;
+
+/* ---------- SCALES ---------- */
+const svg=d3.select("#scatter"),W=+svg.attr("width"),H=+svg.attr("height"),
       M={top:38,right:40,bottom:60,left:80},
-      x=d3.scaleLinear().domain([1,10]).range([M.left+R,W-M.right-R]),
-      y=d3.scaleLinear().domain([1,10]).range([M.top+R,H-M.bottom-R]),
-      col=d3.scaleThreshold().domain([.11,.20,.32,.42,.50])
-          .range(["#9CCC65","#D4E157","#FFEE58","#FFCA28","#FFA726","#FF7043"]);
+      x=d3.scaleLinear().domain([1,10]).range([M.left+RAD,W-M.right-RAD]),
+      y=d3.scaleLinear().domain([1,10]).range([M.top+RAD,H-M.bottom-RAD]),
+      colour=d3.scaleThreshold().domain([.11,.20,.32,.42,.50])
+             .range(["#9CCC65","#D4E157","#FFEE58","#FFCA28","#FFA726","#FF7043"]);
 
 d3.csv(CSV,d3.autoType).then(raw=>{
-  const clean=raw.filter(r=>!Object.values(r).some(v=>v==="#N/A"||v===null)).map(d=>({
-      tel:d["FinScore Telco"],bank:d["Bank Internal Score"],comb:d["Combined Score"],bad:d["Good/Bad Flag"]}));
-  const total=clean.length/BASE,
-        st=f=>{const s=clean.filter(f);return{acc:s.length/total,pd:d3.mean(s,d=>d.bad)||0}};
 
-  const bankBase=st(d=>d.bank<=10),bankDef=bankBase.pd*bankBase.acc;
+  /* ----- DATA ----- */
+  const rows=raw.filter(r=>!Object.values(r).some(v=>v==="#N/A"||v===null));
+  const data=d3.rollups(rows,v=>({
+      telco:+v[0]["FinScore Telco"],
+      bank:+v[0]["Bank Internal Score"],
+      comb:+v[0]["Combined Score"],
+      bad :d3.mean(v,d=>d["Good/Bad Flag"]),
+      n   :v.length}),d=>`${v[0]["FinScore Telco"]}-${v[0]["Bank Internal Score"]}-${v[0]["Combined Score"]}`)
+    .map(d=>d[1]);
 
+  const totalApps=d3.sum(data,d=>d.n)/BASE;
+  const stats=f=>{const s=data.filter(f),n=d3.sum(s,d=>d.n);return{acc:n/totalApps,pd:n?d3.sum(s,d=>d.n*d.bad)/n:0}};
+  const bankBase=stats(d=>d.bank<=10),bankDef=bankBase.pd*bankBase.acc;
+
+  /* ----- AXES ----- */
   svg.append("g").attr("transform",`translate(0,${H-M.bottom})`).call(d3.axisBottom(x).ticks(10));
   svg.append("g").attr("transform",`translate(${M.left},0)`).call(d3.axisLeft(y).ticks(10).tickFormat(d=>11-d));
-  svg.append("text").attr("class","axis").attr("x",W/2).attr("y",H-M.bottom+45).attr("text-anchor","middle").text("FinScore Telco");
-  svg.append("text").attr("class","axis").attr("transform","rotate(-90)").attr("x",-H/2).attr("y",M.left-60).attr("text-anchor","middle").text("Bank Score");
+  svg.append("text").attr("x",W/2).attr("y",H-M.bottom+42).attr("text-anchor","middle").attr("font-size",".8rem").attr("font-weight","bold")
+      .text("FinScore Telco Score");
+  svg.append("text").attr("x",-H/2).attr("y",M.left-60).attr("transform","rotate(-90)").attr("text-anchor","middle").attr("font-size",".8rem").attr("font-weight","bold")
+      .text("Bank Internal Score");
 
-  const dots=svg.append("g").selectAll("circle").data(clean).join("circle")
-      .attr("cx",d=>x(d.tel)).attr("cy",d=>y(d.bank)).attr("r",R).attr("fill",d=>col(d.bad)).attr("stroke","#333").attr("stroke-width",.4);
-  const labels=svg.append("g").selectAll("text").data(clean).join("text")
-      .attr("x",d=>x(d.tel)).attr("y",d=>y(d.bank)).attr("dy",".35em").attr("text-anchor","middle")
-      .attr("font-size",".56rem").attr("font-weight","600").text(d=>d3.format(".0%")(d.bad));
+  /* ----- POINTS ----- */
+  const g=svg.append("g");
+  g.selectAll("circle").data(data).join("circle")
+    .attr("cx",d=>x(d.telco)).attr("cy",d=>y(d.bank)).attr("r",RAD).attr("fill",d=>colour(d.bad)).attr("stroke","#333").attr("stroke-width",.4);
+  g.selectAll("text").data(data).join("text")
+    .attr("x",d=>x(d.telco)).attr("y",d=>y(d.bank)).attr("dy",".35em").attr("text-anchor","middle").attr("font-size",".58rem").attr("font-weight","600")
+    .text(d=>d3.format(".0%")(d.bad));
 
-  const tip=d3.select("body").append("div").style("position","absolute").style("pointer-events","none")
-      .style("background:#fff").style("border","1px solid #ccc").style("padding","4px 6px").style("border-radius","6px").style("font-size:.65rem").style("opacity",0);
-  dots.on("mouseover",(e,d)=>tip.style("opacity",1).html(`T:${d.tel} B:${d.bank}<br>Pd:${(d.bad*100).toFixed(1)}%`))
-      .on("mousemove",(e)=>tip.style("left",(e.pageX+9)+"px").style("top",(e.pageY-26)+"px"))
-      .on("mouseout",()=>tip.style("opacity",0));
+  /* ----- TOOLTIP (fixed chain) ----- */
+  const tip=d3.select("body").append("div").style("position","absolute").style("pointer-events","none");
+  tip.style("background","#fff").style("border","1px solid #ccc").style("padding","4px 7px")
+     .style("border-radius","6px").style("box-shadow","0 2px 6px rgba(0,0,0,.08)").style("font-size",".65rem").style("opacity",0);
 
+  g.selectAll("circle")
+    .on("mouseover",(e,d)=>tip.style("opacity",1).html(`T:${d.telco} B:${d.bank}<br>Pd:${(d.bad*100).toFixed(1)}% N:${d.n}`))
+    .on("mousemove",e=>tip.style("left",(e.pageX+10)+"px").style("top",(e.pageY-28)+"px"))
+    .on("mouseout",()=>tip.style("opacity",0));
+
+  /* ----- BANK CUT LINE ----- */
   const cut=svg.append("line").attr("x1",M.left).attr("x2",W-M.right).attr("stroke","#000").attr("stroke-dasharray","4 4");
 
-  /* ROI */
-  const roi=d3.range(1,11).map(t=>{const s=st(d=>d.comb>=t);return{t,net:(REV-(s.pd*LGD))*s.acc}}),
-        rx=d3.scaleLinear().domain([1,10]).range([0,120]),ry=d3.scaleLinear().domain([0,d3.max(roi,d=>d.net)]).range([80,0]),
-        rSvg=d3.select("#roi").append("svg").attr("width",140).attr("height",90);
+  /* ----- ROI ----- */
+  const roi=d3.range(1,11).map(t=>{const s=stats(d=>d.comb>=t);return{t,net:(REV-(s.pd*LGD))*s.acc}}),
+        rx=d3.scaleLinear().domain([1,10]).range([0,120]),
+        ry=d3.scaleLinear().domain([0,d3.max(roi,d=>d.net)]).range([80,0]);
+  const rSvg=d3.select("#roi-chart").append("svg").attr("width",140).attr("height",90);
   rSvg.append("path").datum(roi).attr("fill","none").attr("stroke","#1976d2").attr("stroke-width",1.4)
       .attr("d",d3.line().x(d=>rx(d.t)).y(d=>ry(d.net)));
-  rSvg.append("circle").attr("id","curr").attr("r",3).attr("fill","#d32f2f");
+  rSvg.append("circle").attr("id","roi-cur").attr("r",3).attr("fill","#d32f2f");
 
-  /* DOM refs */
-  const sl=d3.select("#slider"),th=d3.select("#th"),acc=d3.select("#acc"),def=d3.select("#def"),
-        accB=d3.select("#accB"),defB=d3.select("#defB"),net=d3.select("#net"),sav=d3.select("#save"),
-        gain=d3.select("#gain"),loss=d3.select("#loss"),haloBtn=d3.select("#halo");
-  const halosG=svg.append("g"),halosR=svg.append("g"); let haloOn=false;
+  /* ----- DOM handles ----- */
+  const S=d3.select("#threshold"),T=d3.select("#thresh-val"),
+        ACC=d3.select("#acc-rate"),DEF=d3.select("#def-rate"),
+        ACCB=d3.select("#acc-bank"),DEFB=d3.select("#def-bank"),
+        NET=d3.select("#benefit-loan"),SAVE=d3.select("#benefit-save"),
+        GAIN=d3.select("#thin-count"),LOSS=d3.select("#inverse-count"),
+        haloBtn=d3.select("#thin-toggle"),halosG=svg.append("g"),halosR=svg.append("g"); let haloOn=false;
 
-  function halos(t){
+  /* ----- HALO RENDER ----- */
+  function renderHalos(t){
     const keep=d=>d.comb>=t, bank=d=>d.bank<=11-t,
-          g=clean.filter(d=>d.bank>=8&&d.tel>=6&&keep(d)&&!bank(d)),
-          r=clean.filter(d=>bank(d)&&!keep(d));
-    halosG.selectAll("circle").data(haloOn?g:[]).join("circle")
-        .attr("cx",d=>x(d.tel)).attr("cy",d=>y(d.bank)).attr("r",14).attr("fill","none")
-        .attr("stroke","#22ff55").attr("stroke-width",2.5).style("animation","pulseG 1.4s ease-out infinite");
-    halosR.selectAll("circle").data(haloOn?r:[]).join("circle")
-        .attr("cx",d=>x(d.tel)).attr("cy",d=>y(d.bank)).attr("r",14).attr("fill","none")
-        .attr("stroke","#ff1744").attr("stroke-width",1.6).style("animation","pulseR 1.4s ease-out infinite");
+          greens=data.filter(d=>d.bank>=8&&d.telco>=6&&keep(d)&&!bank(d)),
+          reds  =data.filter(d=>bank(d)&&!keep(d));
+    halosG.selectAll("circle").data(haloOn?greens:[]).join("circle")
+      .attr("cx",d=>x(d.telco)).attr("cy",d=>y(d.bank)).attr("r",14).attr("fill","none")
+      .attr("stroke","var(--thin-green)").attr("stroke-width",2.5).style("animation","pulseG 1.4s ease-out infinite");
+    halosR.selectAll("circle").data(haloOn?reds:[]).join("circle")
+      .attr("cx",d=>x(d.telco)).attr("cy",d=>y(d.bank)).attr("r",14).attr("fill","none")
+      .attr("stroke","var(--inverse-red)").attr("stroke-width",1.6).style("animation","pulseR 1.4s ease-out infinite");
   }
 
-  function upd(t){
-    th.text(t);
-    const keep=d=>d.comb>=t, bank=d=>d.bank<=11-t, sC=st(keep), sB=st(bank);
-    acc.text((sC.acc*100).toFixed(1)+"%"); def.text((sC.pd*100).toFixed(1)+"%");
-    accB.text((sB.acc*100).toFixed(1)+"%"); defB.text((sB.pd*100).toFixed(1)+"%");
-    net.text("₱"+(REV-(sC.pd*LGD)).toFixed(0));
-    sav.text("₱"+((bankDef-sC.pd*sC.acc)*AVG).toFixed(0));
-    gain.text(clean.filter(d=>d.bank>=8&&d.tel>=6&&keep(d)&&!bank(d)).length);
-    loss.text(clean.filter(d=>bank(d)&&!keep(d)).length);
-    dots.attr("opacity",d=>keep(d)?1:FADE);
-    labels.attr("opacity",d=>keep(d)?1:FADE);
-    rSvg.select("#curr").attr("cx",rx(t)).attr("cy",ry((REV-(sC.pd*LGD))*sC.acc));
+  /* ----- UPDATE ----- */
+  function update(t){
+    T.text(t);
+    const keep=d=>d.comb>=t, bank=d=>d.bank<=11-t,
+          sC=stats(keep), sB=stats(bank);
+    ACC.text((sC.acc*100).toFixed(1)+"%"); DEF.text((sC.pd*100).toFixed(1)+"%");
+    ACCB.text((sB.acc*100).toFixed(1)+"%"); DEFB.text((sB.pd*100).toFixed(1)+"%");
+    NET.text("₱"+(REV-(sC.pd*LGD)).toFixed(0));
+    SAVE.text("₱"+((bankDef - sC.pd*sC.acc)*AVG_LOAN).toFixed(0));
+    GAIN.text(data.filter(d=>d.bank>=8&&d.telco>=6&&keep(d)&&!bank(d)).length);
+    LOSS.text(data.filter(d=>bank(d)&&!keep(d)).length);
+    g.selectAll("circle").attr("opacity",d=>keep(d)?1:FADE);
+    g.selectAll("text").attr("opacity",d=>keep(d)?1:FADE);
+    rSvg.select("#roi-cur").attr("cx",rx(t)).attr("cy",ry((REV-(sC.pd*LGD))*sC.acc));
     cut.attr("y1",y(11-t)).attr("y2",y(11-t));
-    halos(t);
+    renderHalos(t);
   }
 
-  sl.on("input",e=>upd(+e.target.value));
-  upd(1);
+  S.on("input",e=>update(+e.target.value));
+  update(1);
 
-  /* play */
-  let tm=null;
-  d3.select("#play").on("click",function(){
-    if(tm){clearInterval(tm);tm=null;this.textContent="Play";return;}
+  /* play loop */
+  let timer=null;
+  d3.select("#toggle").on("click",function(){
+    if(timer){clearInterval(timer);timer=null;this.textContent="Play";return;}
     this.textContent="Pause";
-    tm=setInterval(()=>{let v=+sl.node().value;v=v<10?v+1:1;sl.node().value=v;upd(v)},1600);
+    timer=setInterval(()=>{let v=+S.node().value;v=v<10?v+1:1;S.node().value=v;update(v)},1600);
   });
 
-  haloBtn.on("click",function(){haloOn=!haloOn;haloBtn.classed("active",haloOn);haloBtn.text(haloOn?"Hide":"Highlight");upd(+sl.node().value)});
+  haloBtn.on("click",function(){
+    haloOn=!haloOn;haloBtn.classed("active",haloOn).text(haloOn?"Hide":"Highlight");update(+S.node().value);
+  });
 });
 </script>
 </body>
