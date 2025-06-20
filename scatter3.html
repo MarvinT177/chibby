@@ -132,7 +132,7 @@ const svg=d3.select("#scatter"),W=+svg.attr("width"),H=+svg.attr("height"),
 const x=d3.scaleLinear().domain([1,10]).range([M.left+RAD,W-M.right-RAD]),
       y=d3.scaleLinear().domain([1,10]).range([M.top+RAD,H-M.bottom-RAD]),
       colour=d3.scaleThreshold().domain([.11,.20,.32,.42,.50])
-             .range(["#9CCC65","#D4E157","#FFEE58","#FFCA28","#FFA726","#FF7043"]);
+             .range(["#8CB75A","#9CCC65","#FFEE58","#FFCA28","#FFA726","#FF7043"]);
 
 d3.csv(CSV,d3.autoType).then(raw=>{
   /* --- CLEAN & AGGREGATE --- */
