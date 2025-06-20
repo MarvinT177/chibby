@@ -6,10 +6,10 @@
 <title>Proof of Concept, Proven Value</title>
 <script src="d3.v7.min.js"></script>
 <style>
-/* ---------- PALETTE ---------- */
+/* ---------- PALETTE & GLOBALS ---------- */
 :root{
   --card-grad:#b2d1e7;
-  --btn-main:#376e96;
+  --btn-main:#376e96;   /* also used for bubble stroke */
   --btn-hover:#1d5a86;
   --accent:#7eabcc;
   --heading:#5388ad;
@@ -17,7 +17,6 @@
   --thin-green:#22ff55;
   --inverse-red:#ff1744;
 }
-/* ---------- PAGE BASICS & PREVIOUS STEPS (unchanged) ---------- */
 body{font-family:"Helvetica Neue",Arial,sans-serif;background:#f5f5f5;margin:0;padding:14px;color:#333;font-size:13px}
 h1{text-align:center;margin:0 0 10px;font-size:1.15rem;color:var(--heading)}
 #dashboard{display:flex;gap:14px;justify-content:center;align-items:flex-start;flex-wrap:wrap}
@@ -25,28 +24,34 @@ h1{text-align:center;margin:0 0 10px;font-size:1.15rem;color:var(--heading)}
 #center-col{display:flex;flex-direction:column;align-items:center;gap:12px}
 @media(max-width:900px){#dashboard{flex-direction:column;align-items:center}}
 
+/* ---------- CARD DEPTH ---------- */
 .metric-box{
   background:linear-gradient(180deg,#ffffff 0%,var(--card-grad) 100%);
-  border:1px solid rgba(0,0,0,.06);border-radius:8px;box-shadow:0 6px 14px rgba(0,0,0,.12);
+  border:1px solid rgba(0,0,0,.06);
+  border-radius:8px;box-shadow:0 6px 14px rgba(0,0,0,.12);
   padding:6px 10px;text-align:center;min-width:140px;
 }
 .metric-box h3{margin:0 0 3px;font-size:.72rem;color:var(--heading)}
 .metric-box span{font-size:1.05rem;font-weight:600}
 
+/* sub-boxes */
 .sub-metrics{display:flex;gap:6px;margin-top:3px;justify-content:center;flex-wrap:wrap}
 .sub-box{background:#f6f7f9;border-radius:6px;padding:4px 4px;min-width:64px;box-shadow:var(--shadow-sm)}
 .sub-box h4{margin:0;font-size:.55rem;font-weight:600;color:#555;text-align:center}
 .sub-box span{font-size:.7rem;font-weight:600}
 
+/* thin-file pills */
 #thin-wrap{display:flex;flex-direction:column;align-items:center;gap:3px;margin-top:2px}
 .num-pill{background:rgba(126,171,204,.12);border-radius:6px;padding:2px 8px;min-width:60px;text-align:center}
 .thin-num{color:var(--thin-green);font-weight:600}
 .inverse-num{color:var(--inverse-red);font-weight:600}
 
+/* buttons */
 button{background:var(--btn-main);color:#fff;border:none;border-radius:6px;padding:3px 10px;font-size:.7rem;cursor:pointer;box-shadow:var(--shadow-sm)}
 button:hover{background:var(--btn-hover)}
 #thin-toggle.active{background:var(--thin-green);color:#000}
 
+/* slider */
 #controls{display:flex;gap:10px;align-items:center;background:#fff;border:1px solid #d5d5d5;
           border-radius:8px;box-shadow:var(--shadow-sm);padding:5px 12px;font-size:.7rem}
 input[type=range]{-webkit-appearance:none;width:150px;height:4px;background:var(--accent);border-radius:3px}
@@ -136,16 +141,24 @@ d3.csv(CSV,d3.autoType).then(raw=>{
   svg.append("text").attr("x",-H/2).attr("y",M.left-60).attr("transform","rotate(-90)").attr("text-anchor","middle")
       .attr("font-size",".8rem").attr("font-weight","bold").text("Bank Internal Score");
 
+  /* ---------- BUBBLES (stroke updated) ---------- */
   const g=svg.append("g");
   g.selectAll("circle").data(data).join("circle")
-    .attr("cx",d=>x(d.telco)).attr("cy",d=>y(d.bank)).attr("r",RAD).attr("fill",d=>colour(d.bad)).attr("stroke","#333").attr("stroke-width",.4);
+    .attr("cx",d=>x(d.telco)).attr("cy",d=>y(d.bank)).attr("r",RAD)
+    .attr("fill",d=>colour(d.bad))
+    .attr("stroke",varColor).attr("stroke-width",.6);   // stroke changed
+
+  function varColor(){ return "#376e96"; }
+
   g.selectAll("text").data(data).join("text")
     .attr("x",d=>x(d.telco)).attr("y",d=>y(d.bank)).attr("dy",".35em").attr("text-anchor","middle")
     .attr("font-size",".58rem").attr("font-weight","600").text(d=>d3.format(".0%")(d.bad));
 
+  /* tooltip, ROI mini-chart and remaining JS unchanged … (identical to previous version) */
+  /* ----- TOOLTIP ----- */
   const tip=d3.select("body").append("div").style("position","absolute").style("pointer-events","none")
-      .style("background","#fff").style("border","1px solid #ccc").style("padding","4px 7px")
-      .style("border-radius","6px").style("box-shadow","0 2px 6px rgba(0,0,0,.08)").style("font-size",".65rem").style("opacity",0);
+      .style("background","#fff").style("border","1px solid #ccc").style("padding","4px 7px").style("border-radius","6px")
+      .style("box-shadow","0 2px 6px rgba(0,0,0,.08)").style("font-size",".65rem").style("opacity",0);
   g.selectAll("circle")
     .on("mouseover",(e,d)=>tip.style("opacity",1).html(`T:${d.telco} B:${d.bank}<br>Pd:${(d.bad*100).toFixed(1)}% N:${d.n}`))
     .on("mousemove",e=>tip.style("left",(e.pageX+10)+"px").style("top",(e.pageY-28)+"px"))
@@ -153,29 +166,18 @@ d3.csv(CSV,d3.autoType).then(raw=>{
 
   const cut=svg.append("line").attr("x1",M.left).attr("x2",W-M.right).attr("stroke","#000").attr("stroke-dasharray","4 4");
 
-  /* ---------- ROI MINI-CHART (added area fill) ---------- */
+  /* ROI mini-chart with fill (unchanged from previous step) */
   const roi=d3.range(1,11).map(t=>{const s=stats(d=>d.comb>=t);return{t,net:(REV-(s.pd*LGD))*s.acc}}),
         rx=d3.scaleLinear().domain([1,10]).range([0,120]),
         ry=d3.scaleLinear().domain([0,d3.max(roi,d=>d.net)]).range([80,0]);
-
   const rSvg=d3.select("#roi-chart").append("svg").attr("width",140).attr("height",90);
-
-  /* light area fill */
-  rSvg.append("path").datum(roi)
-      .attr("fill","rgba(126,171,204,.25)")
-      .attr("d",d3.area()
-            .x(d=>rx(d.t))
-            .y0(ry(0))
-            .y1(d=>ry(d.net)));
-
-  /* blue stroke line */
+  rSvg.append("path").datum(roi).attr("fill","rgba(126,171,204,.25)")
+      .attr("d",d3.area().x(d=>rx(d.t)).y0(ry(0)).y1(d=>ry(d.net)));
   rSvg.append("path").datum(roi).attr("fill","none").attr("stroke","#1976d2").attr("stroke-width",1.4)
       .attr("d",d3.line().x(d=>rx(d.t)).y(d=>ry(d.net)));
-
-  /* red moving dot */
   rSvg.append("circle").attr("id","roi-cur").attr("r",3).attr("fill","#d32f2f");
 
-  /* DOM refs */
+  /* DOM refs & update logic identical … */
   const S=d3.select("#threshold"),TH=d3.select("#thresh-val"),
         ACC=d3.select("#acc-rate"),DEF=d3.select("#def-rate"),
         ACCB=d3.select("#acc-bank"),DEFB=d3.select("#def-bank"),
@@ -195,7 +197,8 @@ d3.csv(CSV,d3.autoType).then(raw=>{
 
   function update(t){
     TH.text(t);
-    const keep=d=>d.comb>=t, bank=d=>d.bank<=11-t, sC=stats(keep), sB=stats(bank);
+    const keep=d=>d.comb>=t, bank=d=>d.bank<=11-t,
+          sC=stats(keep), sB=stats(bank);
     ACC.text((sC.acc*100).toFixed(1)+"%"); DEF.text((sC.pd*100).toFixed(1)+"%");
     ACCB.text((sB.acc*100).toFixed(1)+"%"); DEFB.text((sB.pd*100).toFixed(1)+"%");
     NET.text("₱"+(REV-(sC.pd*LGD)).toFixed(0));
@@ -224,6 +227,7 @@ d3.csv(CSV,d3.autoType).then(raw=>{
 </script>
 </body>
 </html>
+
 
 
 
