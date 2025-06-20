@@ -6,18 +6,19 @@
 <title>Proof of Concept, Proven Value</title>
 <script src="d3.v7.min.js"></script>
 <style>
-/* ---------- PALETTE & GLOBALS ---------- */
+/* ---------- PALETTE ---------- */
 :root{
-  --card-grad:#b2d1e7;
-  --btn-main:#376e96;
-  --btn-hover:#1d5a86;  /* used for new thumb ring */
-  --accent:#7eabcc;
-  --heading:#5388ad;
+  --card-grad:#b2d1e7;   /* card gradient stop */
+  --btn-main:#376e96;    /* primary blue       */
+  --btn-hover:#1d5a86;   /* darker blue        */
+  --accent:#7eabcc;      /* medium accent      */
+  --heading:#5388ad;     /* headings / axes    */
   --shadow-sm:0 2px 4px rgba(0,0,0,.08);
-  --thin-green:#22ff55;
-  --inverse-red:#ff1744;
+  --thin-green:#22ff55;  /* halo green         */
+  --inverse-red:#ff1744; /* halo red           */
 }
-/* ---------- PAGE, CARDS, BUTTONS (unchanged) ---------- */
+
+/* ---------- PAGE BASICS ---------- */
 body{font-family:"Helvetica Neue",Arial,sans-serif;background:#f5f5f5;margin:0;padding:14px;color:#333;font-size:13px}
 h1{text-align:center;margin:0 0 10px;font-size:1.15rem;color:var(--heading)}
 #dashboard{display:flex;gap:14px;justify-content:center;align-items:flex-start;flex-wrap:wrap}
@@ -25,8 +26,13 @@ h1{text-align:center;margin:0 0 10px;font-size:1.15rem;color:var(--heading)}
 #center-col{display:flex;flex-direction:column;align-items:center;gap:12px}
 @media(max-width:900px){#dashboard{flex-direction:column;align-items:center}}
 
-.metric-box{background:linear-gradient(180deg,#ffffff 0%,var(--card-grad) 100%);border:1px solid rgba(0,0,0,.06);
-            border-radius:8px;box-shadow:0 6px 14px rgba(0,0,0,.12);padding:6px 10px;text-align:center;min-width:140px}
+/* ---------- CARDS ---------- */
+.metric-box{
+  background:linear-gradient(180deg,#ffffff 0%,var(--card-grad) 100%);
+  border:1px solid rgba(0,0,0,.06);
+  border-radius:8px;box-shadow:0 6px 14px rgba(0,0,0,.12);
+  padding:6px 10px;text-align:center;min-width:140px;
+}
 .metric-box h3{margin:0 0 3px;font-size:.72rem;color:var(--heading)}
 .metric-box span{font-size:1.05rem;font-weight:600}
 
@@ -35,43 +41,45 @@ h1{text-align:center;margin:0 0 10px;font-size:1.15rem;color:var(--heading)}
 .sub-box h4{margin:0;font-size:.55rem;font-weight:600;color:#555;text-align:center}
 .sub-box span{font-size:.7rem;font-weight:600}
 
-/* thin-file pills */
+/* ---------- THIN-FILE PILLS ---------- */
 #thin-wrap{display:flex;flex-direction:column;align-items:center;gap:3px;margin-top:2px}
 .num-pill{background:rgba(126,171,204,.12);border-radius:6px;padding:2px 8px;min-width:60px;text-align:center}
 .thin-num{color:var(--thin-green);font-weight:600}
 .inverse-num{color:var(--inverse-red);font-weight:600}
 
-/* buttons */
-button{background:var(--btn-main);color:#fff;border:none;border-radius:6px;padding:3px 10px;font-size:.7rem;cursor:pointer;box-shadow:var(--shadow-sm)}
+/* ---------- BUTTONS ---------- */
+button{
+  background:var(--btn-main);color:#fff;border:none;border-radius:6px;
+  padding:3px 10px;font-size:.7rem;cursor:pointer;box-shadow:var(--shadow-sm)
+}
 button:hover{background:var(--btn-hover)}
 #thin-toggle.active{background:var(--thin-green);color:#000}
 
-/* ---------- SLIDER (thumb ring added) ---------- */
-#controls{display:flex;gap:10px;align-items:center;background:#fff;border:1px solid #d5d5d5;border-radius:8px;
-          box-shadow:var(--shadow-sm);padding:5px 12px;font-size:.7rem}
+/* ---------- SLIDER & CONTROLS ---------- */
+#controls{display:flex;gap:10px;align-items:center;background:#fff;border:1px solid #d5d5d5;
+          border-radius:8px;box-shadow:var(--shadow-sm);padding:5px 12px;font-size:.7rem}
 input[type=range]{-webkit-appearance:none;width:150px;height:4px;background:var(--accent);border-radius:3px}
 input[type=range]::-webkit-slider-thumb{
   -webkit-appearance:none;width:12px;height:12px;border-radius:50%;
   background:var(--btn-main);
-  border:2px solid #fff;                /* white inner ring */
+  border:2px solid #fff;               /* inner white ring   */
+  box-shadow:0 0 0 1px var(--btn-hover), var(--shadow-sm);  /* new outer ring */
   cursor:pointer;
-  /* new: 1-px outer ring in btn-hover, plus existing small shadow */
-  box-shadow:0 0 0 1px var(--btn-hover), var(--shadow-sm);
 }
 input[type=range]::-moz-range-thumb{
   width:12px;height:12px;border-radius:50%;
   background:var(--btn-main);
   border:2px solid #fff;
-  cursor:pointer;
   box-shadow:0 0 0 1px var(--btn-hover), var(--shadow-sm);
+  cursor:pointer;
 }
 
-/* chart panel */
+/* ---------- CHART & ROI PANEL ---------- */
 svg#scatter{background:linear-gradient(160deg,#e9f4ff 0%,#ffffff 70%);border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
 #roi-box{background:#fff;border-radius:8px;padding:6px 10px;box-shadow:0 6px 14px rgba(0,0,0,.12);text-align:center;min-width:140px}
 #roi-chart svg{overflow:visible}
 
-/* grid & axis accents */
+/* grid line colour */
 svg#scatter g.tick line,
 svg#scatter path.domain{stroke:var(--accent);stroke-opacity:.35}
 svg#scatter>text{fill:var(--heading)}
@@ -84,14 +92,8 @@ svg#scatter>text{fill:var(--heading)}
 <body>
 <h1>Proof of Concept, Proven Value</h1>
 
-<!-- HTML structure & JS remain identical to previous file -->
-<!-- (Bubble stroke blue, ROI fill, applicant counts, etc.) -->
-<!-- Copy of body omitted for brevity — functionality unchanged -->
-<!-- Include the same dashboard div and <script> as in the last approved version -->
-
-<!-- BEGIN DASHBOARD -->
 <div id="dashboard">
-  <!-- LEFT -->
+  <!-- LEFT COLUMN -->
   <div id="left-col">
     <div class="metric-box"><h3>Combined Approval</h3><span id="acc-rate">0%</span>
       <div class="sub-metrics"><div class="sub-box"><h4>Bank</h4><span id="acc-bank">0%</span></div></div></div>
@@ -99,7 +101,7 @@ svg#scatter>text{fill:var(--heading)}
       <div class="sub-metrics"><div class="sub-box"><h4>Bank</h4><span id="def-bank">0%</span></div></div></div>
   </div>
 
-  <!-- CENTER -->
+  <!-- CENTER COLUMN -->
   <div id="center-col">
     <svg id="scatter" width="540" height="420"></svg>
     <div id="controls">
@@ -109,7 +111,7 @@ svg#scatter>text{fill:var(--heading)}
     </div>
   </div>
 
-  <!-- RIGHT -->
+  <!-- RIGHT COLUMN -->
   <div id="right-col">
     <div class="metric-box"><h3>Peso Benefit</h3>
       <div class="sub-metrics" style="gap:5px">
@@ -127,14 +129,169 @@ svg#scatter>text{fill:var(--heading)}
     <div class="metric-box" id="roi-box"><h3>ROI Curve</h3><div id="roi-chart"></div></div>
   </div>
 </div>
-<!-- END DASHBOARD -->
 
 <script>
-/* ----- JavaScript is exactly the same as previous version ----- */
-/* (omitted here for brevity; use the working JS from the last file) */
+/* ---------- CONFIG ---------- */
+const REV=2500,LGD=6500,AVG_LOAN=75000,CSV="data.csv";
+const RAD=10,FADE=.25,BASE=.70;
+
+const svg=d3.select("#scatter"),W=+svg.attr("width"),H=+svg.attr("height"),
+      M={top:38,right:40,bottom:60,left:80};
+
+const x=d3.scaleLinear().domain([1,10]).range([M.left+RAD,W-M.right-RAD]),
+      y=d3.scaleLinear().domain([1,10]).range([M.top+RAD,H-M.bottom-RAD]),
+      colour=d3.scaleThreshold().domain([.11,.20,.32,.42,.50])
+             .range(["#9CCC65","#D4E157","#FFEE58","#FFCA28","#FFA726","#FF7043"]);
+
+d3.csv(CSV,d3.autoType).then(raw=>{
+  /* --- CLEAN & AGGREGATE DATA --- */
+  const clean=raw.filter(r=>!Object.values(r).some(v=>v==="#N/A"||v===null));
+  const data=d3.rollups(
+      clean,
+      v=>({telco:+v[0]["FinScore Telco"],
+           bank:+v[0]["Bank Internal Score"],
+           comb:+v[0]["Combined Score"],
+           bad :d3.mean(v,d=>d["Good/Bad Flag"]),
+           n   :v.length}),
+      d=>`${d["FinScore Telco"]}-${d["Bank Internal Score"]}-${d["Combined Score"]}`
+    ).map(d=>d[1]);
+
+  const totalApps=d3.sum(data,d=>d.n)/BASE;
+  const stats=f=>{const s=data.filter(f),n=d3.sum(s,d=>d.n);return{acc:n/totalApps,pd:n?d3.sum(s,d=>d.n*d.bad)/n:0}};
+  const bankBase=stats(d=>d.bank<=10);
+
+  /* --- AXES --- */
+  svg.append("g").attr("transform",`translate(0,${H-M.bottom})`).call(d3.axisBottom(x).ticks(10));
+  svg.append("g").attr("transform",`translate(${M.left},0)`).call(d3.axisLeft(y).ticks(10).tickFormat(d=>11-d));
+  svg.append("text").attr("x",W/2).attr("y",H-M.bottom+42).attr("text-anchor","middle")
+      .attr("font-size",".8rem").attr("font-weight","bold").text("FinScore Telco Score");
+  svg.append("text").attr("x",-H/2).attr("y",M.left-60).attr("transform","rotate(-90)").attr("text-anchor","middle")
+      .attr("font-size",".8rem").attr("font-weight","bold").text("Bank Internal Score");
+
+  /* --- SCATTER POINTS (blue stroke) --- */
+  const g=svg.append("g");
+  g.selectAll("circle").data(data).join("circle")
+    .attr("cx",d=>x(d.telco)).attr("cy",d=>y(d.bank)).attr("r",RAD)
+    .attr("fill",d=>colour(d.bad))
+    .attr("stroke","#376e96").attr("stroke-width",.6);
+
+  g.selectAll("text").data(data).join("text")
+    .attr("x",d=>x(d.telco)).attr("y",d=>y(d.bank)).attr("dy",".35em").attr("text-anchor","middle")
+    .attr("font-size",".58rem").attr("font-weight","600")
+    .text(d=>d3.format(".0%")(d.bad));
+
+  /* --- TOOLTIP --- */
+  const tip=d3.select("body").append("div").style("position","absolute").style("pointer-events","none")
+      .style("background","#fff").style("border","1px solid #ccc").style("padding","4px 7px")
+      .style("border-radius","6px").style("box-shadow","0 2px 6px rgba(0,0,0,.08)").style("font-size",".65rem").style("opacity",0);
+  g.selectAll("circle")
+    .on("mouseover",(e,d)=>tip.style("opacity",1).html(
+        `T:${d.telco} B:${d.bank}<br>Pd:${(d.bad*100).toFixed(1)}% N:${d.n}`))
+    .on("mousemove",e=>tip.style("left",(e.pageX+10)+"px").style("top",(e.pageY-28)+"px"))
+    .on("mouseout",()=>tip.style("opacity",0));
+
+  /* --- BANK CUTOFF LINE --- */
+  const cut=svg.append("line").attr("x1",M.left).attr("x2",W-M.right)
+               .attr("stroke","#000").attr("stroke-dasharray","4 4");
+
+  /* --- ROI MINI-CHART (area fill + line) --- */
+  const roi=d3.range(1,11).map(t=>{const s=stats(d=>d.comb>=t);return{t,net:(REV-(s.pd*LGD))*s.acc}}),
+        rx=d3.scaleLinear().domain([1,10]).range([0,120]),
+        ry=d3.scaleLinear().domain([0,d3.max(roi,d=>d.net)]).range([80,0]);
+
+  const rSvg=d3.select("#roi-chart").append("svg").attr("width",140).attr("height",90);
+
+  rSvg.append("path").datum(roi)
+      .attr("fill","rgba(126,171,204,.25)")
+      .attr("d",d3.area().x(d=>rx(d.t)).y0(ry(0)).y1(d=>ry(d.net)));
+
+  rSvg.append("path").datum(roi).attr("fill","none").attr("stroke","#1976d2").attr("stroke-width",1.4)
+      .attr("d",d3.line().x(d=>rx(d.t)).y(d=>ry(d.net)));
+
+  rSvg.append("circle").attr("id","roi-cur").attr("r",3).attr("fill","#d32f2f");
+
+  /* --- DOM REFS --- */
+  const slider=d3.select("#threshold"),thLabel=d3.select("#thresh-val"),
+        accSp=d3.select("#acc-rate"),defSp=d3.select("#def-rate"),
+        accBSp=d3.select("#acc-bank"),defBSp=d3.select("#def-bank"),
+        benLoanSp=d3.select("#benefit-loan"),benSaveSp=d3.select("#benefit-save"),
+        thinGainSp=d3.select("#thin-count"),thinInvSp=d3.select("#inverse-count"),
+        toggle=d3.select("#thin-toggle"),
+        halosG=svg.append("g"),halosR=svg.append("g"); let haloOn=false;
+
+  /* --- HALOS --- */
+  function renderHalos(t){
+    const keep=d=>d.comb>=t, bank=d=>d.bank<=11-t,
+          greens=data.filter(d=>d.bank>=8&&d.telco>=6&&keep(d)&&!bank(d)),
+          reds  =data.filter(d=>bank(d)&&!keep(d));
+    halosG.selectAll("circle").data(haloOn?greens:[]).join("circle")
+      .attr("cx",d=>x(d.telco)).attr("cy",d=>y(d.bank))
+      .attr("r",14).attr("fill","none")
+      .attr("stroke","var(--thin-green)").attr("stroke-width",2.5)
+      .style("animation","pulseG 1.4s ease-out infinite");
+    halosR.selectAll("circle").data(haloOn?reds:[]).join("circle")
+      .attr("cx",d=>x(d.telco)).attr("cy",d=>y(d.bank))
+      .attr("r",14).attr("fill","none")
+      .attr("stroke","var(--inverse-red)").attr("stroke-width",1.6)
+      .style("animation","pulseR 1.4s ease-out infinite");
+  }
+
+  /* --- UPDATE FUNCTION --- */
+  function update(t){
+    thLabel.text(t);
+    const keep=d=>d.comb>=t, bank=d=>d.bank<=11-t,
+          sC=stats(keep), sB=stats(bank);
+
+    accSp.text((sC.acc*100).toFixed(1)+"%");
+    defSp.text((sC.pd*100).toFixed(1)+"%");
+    accBSp.text((sB.acc*100).toFixed(1)+"%");
+    defBSp.text((sB.pd*100).toFixed(1)+"%");
+
+    benLoanSp.text("₱"+(REV-(sC.pd*LGD)).toFixed(0));
+    benSaveSp.text("₱"+((bankBase.pd*bankBase.acc - sC.pd*sC.acc)*AVG_LOAN).toFixed(0));
+
+    thinGainSp.text(d3.sum(data.filter(d=>d.bank>=8&&d.telco>=6&&keep(d)&&!bank(d)),d=>d.n));
+    thinInvSp .text(d3.sum(data.filter(d=>bank(d)&&!keep(d)),d=>d.n));
+
+    g.selectAll("circle").attr("opacity",d=>keep(d)?1:FADE);
+    g.selectAll("text").attr("opacity",d=>keep(d)?1:FADE);
+
+    rSvg.select("#roi-cur")
+        .attr("cx",rx(t))
+        .attr("cy",ry((REV-(sC.pd*LGD))*sC.acc));
+
+    cut.attr("y1",y(11-t)).attr("y2",y(11-t));
+
+    renderHalos(t);
+  }
+
+  slider.on("input",e=>update(+e.target.value));
+  update(1);
+
+  /* --- PLAY / PAUSE --- */
+  let timer=null;
+  d3.select("#toggle").on("click",function(){
+    if(timer){clearInterval(timer);timer=null;this.textContent="Play";return;}
+    this.textContent="Pause";
+    timer=setInterval(()=>{
+      let v=+slider.node().value;
+      v=v<10?v+1:1;
+      slider.node().value=v;
+      update(v);
+    },1600);
+  });
+
+  /* --- TOGGLE HALOS --- */
+  toggle.on("click",function(){
+    haloOn=!haloOn;
+    toggle.classed("active",haloOn).text(haloOn?"Hide":"Highlight");
+    update(+slider.node().value);
+  });
+});
 </script>
 </body>
 </html>
+
 
 
 
