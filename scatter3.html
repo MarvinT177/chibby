@@ -12,7 +12,7 @@
   --btn-main:#376e96;
   --btn-hover:#1d5a86;
   --accent:#7eabcc;
-  --heading:#5388ad;          /* used for axis text & card headings */
+  --heading:#ffffff;          /* white headline on blue background */
   --shadow-sm:0 2px 4px rgba(0,0,0,.08);
   --thin-green:#22ff55;
   --inverse-red:#ff1744;
@@ -25,13 +25,24 @@ body{
   color:#333;font-size:13px;
   background:#7eabcc;         /* lighter solid tint */
 }
-h1{
-  text-align:center;
-  margin:0 0 10px;
-  font-size:1.15rem;
-  color:#ffffff;              /* white headline on blue background */
+h1{text-align:center;margin:0 0 10px;font-size:1.15rem;color:var(--heading)}
+
+/* ---------- FADED BACKGROUND LOGO ---------- */
+#bg-logo{
+  position:fixed;
+  top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  width:520px;        /* tweak size here */
+  opacity:0.08;       /* tweak fade here */
+  pointer-events:none;
+  z-index:0;
 }
-#dashboard{display:flex;gap:14px;justify-content:center;align-items:flex-start;flex-wrap:wrap}
+
+/* ---------- DASHBOARD LAYOUT ---------- */
+#dashboard{
+  position:relative; z-index:1;   /* keep above logo */
+  display:flex;gap:14px;justify-content:center;align-items:flex-start;flex-wrap:wrap
+}
 #left-col,#right-col{display:flex;flex-direction:column;gap:12px}
 #center-col{display:flex;flex-direction:column;align-items:center;gap:12px}
 @media(max-width:900px){#dashboard{flex-direction:column;align-items:center}}
@@ -43,7 +54,7 @@ h1{
   border-radius:8px;box-shadow:0 6px 14px rgba(0,0,0,.12);
   padding:6px 10px;text-align:center;min-width:140px
 }
-.metric-box h3{margin:0 0 3px;font-size:.72rem;color:var(--heading)}
+.metric-box h3{margin:0 0 3px;font-size:.72rem;color:#5388ad}
 .metric-box span{font-size:1.05rem;font-weight:600}
 
 .sub-metrics{display:flex;gap:6px;margin-top:3px;justify-content:center;flex-wrap:wrap}
@@ -69,8 +80,9 @@ input[type=range]{-webkit-appearance:none;width:150px;height:4px;background:var(
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;
                                         background:var(--btn-main);border:2px solid #fff;
                                         box-shadow:0 0 0 1px var(--btn-hover), var(--shadow-sm);cursor:pointer}
-input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--btn-main);
-                                    border:2px solid #fff;box-shadow:0 0 0 1px var(--btn-hover), var(--shadow-sm);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;
+                                    background:var(--btn-main);border:2px solid #fff;
+                                    box-shadow:0 0 0 1px var(--btn-hover), var(--shadow-sm);cursor:pointer}
 
 /* ---------- CHART & ROI PANEL ---------- */
 svg#scatter{
@@ -84,7 +96,7 @@ svg#scatter{
 /* grid & axis accents */
 svg#scatter g.tick line,
 svg#scatter path.domain{stroke:var(--accent);stroke-opacity:.35}
-svg#scatter>text{fill:var(--heading)}
+svg#scatter>text{fill:#5388ad}
 
 /* halo animations */
 @keyframes pulseG{0%{r:14;opacity:.8}50%{r:26;opacity:0}100%{r:14;opacity:.8}}
@@ -92,9 +104,11 @@ svg#scatter>text{fill:var(--heading)}
 </style>
 </head>
 <body>
+<!-- BACKGROUND LOGO -->
+<img src="https://www.finscore.ph/wp-content/uploads/2020/03/cropped-FS-LOGO_ORIGINAL-HORIZONTAL-cropped.png" id="bg-logo" alt="Company logo">
+
 <h1>Proof of Concept, Proven Value</h1>
 
-<!-- DASHBOARD -->
 <div id="dashboard">
   <!-- LEFT -->
   <div id="left-col">
@@ -166,12 +180,11 @@ d3.csv(CSV,d3.autoType).then(raw=>{
   svg.append("g").attr("transform",`translate(${M.left},0)`).call(d3.axisLeft(y).ticks(10).tickFormat(d=>11-d));
 
   svg.append("text").attr("x",W/2).attr("y",H-M.bottom+42).attr("text-anchor","middle")
-      .attr("font-size",".8rem").attr("font-weight","bold").attr("fill",varHeading)
+      .attr("font-size",".8rem").attr("font-weight","bold").attr("fill","#5388ad")
       .text("FinScore Telco Score");
   svg.append("text").attr("x",-H/2).attr("y",M.left-60).attr("transform","rotate(-90)").attr("text-anchor","middle")
-      .attr("font-size",".8rem").attr("font-weight","bold").attr("fill",varHeading)
+      .attr("font-size",".8rem").attr("font-weight","bold").attr("fill","#5388ad")
       .text("Bank Internal Score");
-  function varHeading(){return "#5388ad";}
 
   /* --- BUBBLES --- */
   const g=svg.append("g");
