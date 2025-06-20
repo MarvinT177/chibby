@@ -7,40 +7,41 @@
 <script src="d3.v7.min.js"></script>
 <style>
 /* ---------- SAME CSS AS LAST VERSION ---------- */
-:root{--card-bg:#fff;--shadow-sm:0 2px 4px rgba(0,0,0,.08);--thin-green:#22ff55;--inverse-red:#ff1744;}
-body{font-family:"Helvetica Neue",Arial,sans-serif;background:#f5f5f5;margin:0;padding:14px;color:#333;font-size:13px}
-h1{text-align:center;margin:0 0 10px;font-size:1.15rem}
-#dashboard{display:flex;gap:14px;justify-content:center;align-items:flex-start;flex-wrap:wrap}
-#left-col,#right-col{display:flex;flex-direction:column;gap:12px}
-#center-col{display:flex;flex-direction:column;align-items:center;gap:12px}
-@media(max-width:900px){#dashboard{flex-direction:column;align-items:center}}
-.metric-box{background:linear-gradient(180deg,#fff 0%,#f2f4fa 100%);border:1px solid rgba(0,0,0,.06);border-radius:8px;
-            box-shadow:0 6px 14px rgba(0,0,0,.12);padding:6px 10px;text-align:center;min-width:140px}
-.metric-box h3{margin:0 0 3px;font-size:.72rem;color:#666}
-.metric-box span{font-size:1.05rem;font-weight:600}
-.sub-metrics{display:flex;gap:6px;margin-top:3px;justify-content:center;flex-wrap:wrap}
-.sub-box{background:#f6f7f9;border-radius:6px;padding:4px 4px;min-width:64px;box-shadow:var(--shadow-sm)}
-.sub-box h4{margin:0;font-size:.55rem;font-weight:600;color:#555;text-align:center}
-.sub-box span{font-size:.7rem;font-weight:600}
-#thin-wrap{display:flex;flex-direction:column;align-items:center;gap:3px;margin-top:2px}
-.num-pill{background:#f6f7f9;border-radius:6px;padding:2px 8px;min-width:60px;text-align:center}
-.thin-num{color:var(--thin-green);font-weight:600}
-.inverse-num{color:var(--inverse-red);font-weight:600}
-#thin-toggle{margin-top:8px;border:none;border-radius:6px;font-size:.62rem;padding:3px 8px;cursor:pointer;
-             box-shadow:var(--shadow-sm);background:#616161;color:#fff}
+:root{
+  --card-grad:#b2d1e7;        /* gradient light blue */
+  --btn-main:#376e96;         /* button normal */
+  --btn-hover:#1d5a86;        /* button hover  */
+  --shadow-sm:0 2px 4px rgba(0,0,0,.08);
+  --thin-green:#22ff55;
+  --inverse-red:#ff1744;
+}
+
+/* card depth */
+.metric-box{
+  background:linear-gradient(180deg,#ffffff 0%,var(--card-grad) 100%);
+  border:1px solid rgba(0,0,0,.06);
+  border-radius:8px;
+  box-shadow:0 6px 14px rgba(0,0,0,.12);
+  padding:6px 10px;
+  text-align:center;
+  min-width:140px;
+}
+
+/* buttons (Play / Hide-Highlight) */
+button{
+  background:var(--btn-main);
+  color:#fff;border:none;border-radius:6px;
+  padding:3px 10px;font-size:.7rem;cursor:pointer;box-shadow:var(--shadow-sm);
+}
+button:hover{background:var(--btn-hover)}
+/* thin-file button when active keeps its green state */
 #thin-toggle.active{background:var(--thin-green);color:#000}
-#controls{display:flex;gap:10px;align-items:center;background:var(--card-bg);border:1px solid #d5d5d5;border-radius:8px;
-          box-shadow:var(--shadow-sm);padding:5px 12px;font-size:.7rem}
-input[type=range]{-webkit-appearance:none;width:150px;height:4px;background:#d0d0d0;border-radius:3px}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#616161;border:2px solid #fff;cursor:pointer;box-shadow:var(--shadow-sm)}
-input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#616161;border:2px solid #fff;cursor:pointer;box-shadow:var(--shadow-sm)}
-button{background:#616161;color:#fff;border:none;border-radius:6px;padding:3px 10px;font-size:.7rem;cursor:pointer;box-shadow:var(--shadow-sm)}
-button:hover{background:#424242}
-svg#scatter{background:linear-gradient(160deg,#e9f4ff 0%,#ffffff 70%);border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
-#roi-box{background:var(--card-bg);border-radius:8px;padding:6px 10px;box-shadow:0 6px 14px rgba(0,0,0,.12);text-align:center;min-width:140px}
-#roi-chart svg{overflow:visible}
-@keyframes pulseG{0%{r:14;opacity:.8}50%{r:26;opacity:0}100%{r:14;opacity:.8}}
-@keyframes pulseR{0%{r:14;opacity:.45}50%{r:26;opacity:0}100%{r:14;opacity:.45}}
+
+/* slider thumb colour tweaks */
+input[type=range]::-webkit-slider-thumb,
+input[type=range]::-moz-range-thumb{
+  background:var(--btn-main);
+}
 </style>
 </head>
 <body>
