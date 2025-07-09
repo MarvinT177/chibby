@@ -4,7 +4,8 @@
 <head>
 <meta charset="utf-8"/>
 <title>Proof of Concept, Proven Value</title>
-<script src="d3.v7.min.js"></script>
+<!-- Using CDN for D3 to avoid local 404 issues -->
+<script src="https://d3js.org/d3.v7.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
 <style>
 /* ---------- PALETTE ---------- */
@@ -137,64 +138,16 @@ svg#scatter>text{fill:#5388ad}
   </div>
 </div>
 
+<!-- --------------- SCRIPT --------------- -->
 <script>
 /* ---------- CONFIG ---------- */
-const REV=2500,LGD=6500,AVG_LOAN=75000,CSV="data.csv";
+const REV=2500,LGD=6500,AVG_LOAN=75000,CSV="data.csv"; // ensure data.csv sits next to this file
 const RAD=10,FADE=.25,BASE=.70;
 
-/* ---------- SCALES ---------- */
-const svg=d3.select("#scatter"),W=+svg.attr("width"),H=+svg.attr("height"),
-      M={top:38,right:40,bottom:60,left:80};
-
-const x=d3.scaleLinear().domain([1,10]).range([M.left+RAD,W-M.right-RAD]),
-      y=d3.scaleLinear().domain([1,10]).range([M.top+RAD,H-M.bottom-RAD]),
-      colour=d3.scaleThreshold().domain([.11,.20,.32,.42,.50])
-             .range(["#8CB75A","#9CCC65","#FFEE58","#FFCA28","#FFA726","#FF7043"]);
-
-d3.csv(CSV,d3.autoType).then(raw=>{
-  /* --- CLEAN & AGGREGATE --- */
-  const clean=raw.filter(r=>!Object.values(r).some(v=>v==="#N/A"||v===null));
-  const data=d3.rollups(
-      clean,
-      v=>({telco:+v[0]["FinScore Telco"],bank:+v[0]["Bank Internal Score"],comb:+v[0]["Combined Score"],
-           bad:d3.mean(v,d=>d["Good/Bad Flag"]),n:v.length}),
-      d=>`${d["FinScore Telco"]}-${d["Bank Internal Score"]}-${d["Combined Score"]}`
-    ).map(d=>d[1]);
-
-  const totalApps=d3.sum(data,d=>d.n)/BASE;
-  const stats=f=>{const s=data.filter(f),n=d3.sum(s,d=>d.n);return{acc:n/totalApps,pd:n?d3.sum(s,d=>d.n*d.bad)/n:0}};
-  const bankBase=stats(d=>d.bank<=10);
-
-  /* --- AXES --- */
-  svg.append("g").attr("transform",`translate(0,${H-M.bottom})`).call(d3.axisBottom(x).ticks(10));
-  svg.append("g").attr("transform",`translate(${M.left},0)").call(d3.axisLeft(y).ticks(10).tickFormat(d=>11-d));
-
-  svg.append("text").attr("x",W/2).attr("y",H-M.bottom+42).attr("text-anchor","middle")
-      .attr("font-size",".8rem").attr("font-weight","bold").attr("fill","#5388ad")
-      .text("FinScore Telco Score");
-  svg.append("text").attr("x",-H/2).attr("y",M.left-60).attr("transform","rotate(-90)").attr("text-anchor","middle")
-      .attr("font-size",".8rem").attr("font-weight","bold").attr("fill","#5388ad")
-      .text("Bank Internal Score");
-
-  /* --- BUBBLES + HIGHLIGHT OVERLAY --- */
-  const g=svg.append("g");
-
-  const nodes=g.selectAll("g.pt").data(data).join("g").attr("class","pt")
-               .attr("transform",d=>`translate(${x(d.telco)},${y(d.bank)})`);
-
-  nodes.append("circle")
-       .attr("r",RAD).attr("fill",d=>colour(d.bad)).attr("stroke","#376e96").attr("stroke-width",.6);
-
-  /* glossy highlight  */
-  nodes.append("circle")
-       .attr("r",RAD*0.45).attr("cx",-RAD/3).attr("cy",-RAD/3)
-       .attr("fill","#ffffff").attr("opacity",0.25).attr("pointer-events","none");
-
-  /* percentage labels */
-  nodes.append("text")
-       .attr("dy",".35em").attr("text-anchor","middle").attr("font-size",".58rem").attr("font-weight","600")
-       .text(d=>d3.format(".0%")
-
+/* ---------- SCALES & SVG ---------- */
+const svg=d3.select("#scatter"),
+      W=+svg.attr("width"),
+      H=+svg
 
 
 
