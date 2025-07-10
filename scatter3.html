@@ -67,7 +67,7 @@ h1{
 /* ---------- BUTTONS ---------- */
 button{background:var(--btn-main);color:#fff;border:none;border-radius:6px;padding:3px 10px;font-size:.7rem;cursor:pointer;box-shadow:var(--shadow-sm)}
 button:hover{background:var(--btn-hover)}
-#thin-toggle.active{background:var(--thin-green);color:#000}
+#highlight-toggle.active{background:var(--thin-green);color:#000}
 
 /* ---------- SLIDER ---------- */
 #controls{display:flex;gap:10px;align-items:center;background:#fff;border:1px solid #d5d5d5;border-radius:8px;
@@ -131,8 +131,8 @@ svg#scatter>text{fill:#5388ad}
         <span id="thin-count"   class="num-pill thin-num">0</span>
         <span id="inverse-count"class="num-pill inverse-num">0</span>
       </div>
-      <button id="thin-toggle">Highlight Gains</button>
-        <button id="inv-toggle">Bank-Only</button></div>
+      <button id="highlight-toggle">Highlight</button>
+        <button id="bank-toggle">Bank-Only</button></div>
 
     <div class="metric-box" id="roi-box"><h3>ROI Curve</h3><div id="roi-chart"></div></div>
   </div>
@@ -231,27 +231,31 @@ d3.csv(CSV,d3.autoType).then(raw=>{
         accBSp=d3.select("#acc-bank"),defBSp=d3.select("#def-bank"),
         benLoanSp=d3.select("#benefit-loan"),benSaveSp=d3.select("#benefit-save"),
         thinGainSp=d3.select("#thin-count"),thinInvSp=d3.select("#inverse-count"),
-        toggle=d3.select("#thin-toggle"),
+        toggle=d3.select("#highlight-toggle"),
         halosG=svg.append("g"),halosR=svg.append("g");
 let greenOn=false;
 let redOn=false;
 
   /* --- HALOS --- */
-  function renderHalos(t){
-    const keep=d=>d.comb>=t,
-          bank=d=>d.bank<=11-t,
-          greens=data.filter(d=>keep(d)&&!bank(d)),
-          reds  =data.filter(d=>bank(d)&&!keep(d));
+  
+function renderHalos(t){
+  const keep = d=>d.comb>=t,
+        bank = d=>d.bank<=11-t,
+        greens = data.filter(d=>keep(d)&&!bank(d)),
+        reds   = data.filter(d=>bank(d)&&!keep(d));
 
-    halosG.selectAll("circle").data(greenOn?greens:[]).join("circle")
-      .attr("cx",d=>x(d.telco)).attr("cy",d=>y(d.bank)).attr("r",14)
-      .attr("fill","none").attr("stroke","var(--thin-green)").attr("stroke-width",2.5)
-      .style("animation","pulseG 1.4s ease-out infinite");
+  // Greens always depend on highlightOn
+  halosG.selectAll("circle").data(highlightOn?greens:[]).join("circle")
+    .attr("cx",d=>x(d.telco)).attr("cy",d=>y(d.bank)).attr("r",14)
+    .attr("fill","none").attr("stroke","var(--thin-green)").attr("stroke-width",2.5)
+    .style("animation","pulseG 1.4s ease-out infinite");
 
-    halosR.selectAll("circle").data(redOn?reds:[]).join("circle")
-      .attr("cx",d=>x(d.telco)).attr("cy",d=>y(d.bank)).attr("r",14)
-      .attr("fill","none").attr("stroke","var(--inverse-red)").attr("stroke-width",1.6)
-      .style("animation","pulseR 1.4s ease-out infinite");
+  // Reds only when highlightOn AND !allowBank
+  const showR = highlightOn && !allowBank ? reds : [];
+  halosR.selectAll("circle").data(showR).join("circle")
+    .attr("cx",d=>x(d.telco)).attr("cy",d=>y(d.bank)).attr("r",14)
+    .attr("fill","none").attr("stroke","var(--inverse-red)").attr("stroke-width",1.6)
+    .style("animation","pulseR 1.4s ease-out infinite");
 }
 
   /* --- UPDATE --- */
@@ -271,7 +275,7 @@ let redOn=false;
     thinGainSp.text(d3.sum(data.filter(d=>keep(d)&&!bank(d)),d=>d.n));
     thinInvSp.text(d3.sum(data.filter(d=>bank(d)&&!keep(d)),d=>d.n));
 
-    nodes.attr("opacity",d=>keep(d)?1:FADE);
+    nodes.attr("opacity",d=>(keep(d)|| (allowBank && bank(d)))?1:FADE);
     cut.attr("y1",y(11-t)).attr("y2",y(11-t));
 
     rSvg.select("#roi-cur").attr("cx",rx(t)).attr("cy",ry((REV-(sC.pd*LGD))*sC.acc));
@@ -312,7 +316,6 @@ let redOn=false;
 </script>
 </body>
 </html>
-
 
 
 
