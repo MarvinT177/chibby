@@ -282,17 +282,24 @@ function update(t){
   benLoanSp.text("₱"+(REV-(sComb.pd*LGD)).toFixed(0));
   benSaveSp.text("₱"+((bankBase.pd*bankBase.acc - sComb.pd*sComb.acc)*AVG_LOAN).toFixed(0));
 
+  
   // thin-file numbers
   const thinCnt = d3.sum(data.filter(d=>keep(d)&&!bank(d)),d=>d.n),
         invCnt  = d3.sum(data.filter(d=>bank(d)&&!keep(d)),d=>d.n);
 
   thinGainSp.text(thinCnt);
-   // for class toggle
 
   if(bankKeep){
-     // move inverse count into gains (green)
-     thinGainSp.text(thinCnt+invCnt);
-     thinInvSp.text("0").classed("inverse-num",false).classed("thin-num",true);
+      // recolor inverse pill to green but keep separate count
+      thinInvSp.text(invCnt)
+               .classed("inverse-num",false)
+               .classed("thin-num",true);
+  }else{
+      thinInvSp.text(invCnt)
+               .classed("thin-num",false)
+               .classed("inverse-num",true);
+  }
+
   }else{
      thinInvSp.text(invCnt).classed("thin-num",false).classed("inverse-num",true);
   }
