@@ -260,28 +260,55 @@ function renderHalos(t){
 
 
   /* --- UPDATE --- */
-  function update(t){
-    thVal.text(t);
-    const keep=d=>d.comb>=t, bank=d=>d.bank<=11-t,
-          sC=stats(keep), sB=stats(bank);
+  
+function update(t){
+  thVal.text(t);
 
-    accSp.text((sC.acc*100).toFixed(1)+"%");
-    defSp.text((sC.pd*100).toFixed(1)+"%");
-    accBSp.text((sB.acc*100).toFixed(1)+"%");
-    defBSp.text((sB.pd*100).toFixed(1)+"%");
+  const keep = d=>d.comb>=t,
+        bank = d=>d.bank<=11-t,
+        keepOrBank = d=> keep(d) || (bankKeep && bank(d));
 
-    benLoanSp.text("₱"+(REV-(sC.pd*LGD)).toFixed(0));
-    benSaveSp.text("₱"+((bankBase.pd*bankBase.acc - sC.pd*sC.acc)*AVG_LOAN).toFixed(0));
+  // stats for combined (with bankKeep option)
+  const sComb = stats(keepOrBank),
+        sBank = stats(bank);
 
-    thinGainSp.text(d3.sum(data.filter(d=>keep(d)&&!bank(d)),d=>d.n));
-    thinInvSp.text(d3.sum(data.filter(d=>bank(d)&&!keep(d)),d=>d.n));
+  // approvals & defaults
+  accSp.text((sComb.acc*100).toFixed(1)+"%");
+  defSp.text((sComb.pd*100).toFixed(1)+"%");
+  accBSp.text((sBank.acc*100).toFixed(1)+"%");
+  defBSp.text((sBank.pd*100).toFixed(1)+"%");
 
-    nodes.attr("opacity",d=> (keep(d) || (bankKeep && bank(d))) ? 1 : FADE );
-    cut.attr("y1",y(11-t)).attr("y2",y(11-t));
+  // peso benefit
+  benLoanSp.text("₱"+(REV-(sComb.pd*LGD)).toFixed(0));
+  benSaveSp.text("₱"+((bankBase.pd*bankBase.acc - sComb.pd*sComb.acc)*AVG_LOAN).toFixed(0));
 
-    rSvg.select("#roi-cur").attr("cx",rx(t)).attr("cy",ry((REV-(sC.pd*LGD))*sC.acc));
-    renderHalos(t);
+  // thin-file numbers
+  const thinCnt = d3.sum(data.filter(d=>keep(d)&&!bank(d)),d=>d.n),
+        invCnt  = d3.sum(data.filter(d=>bank(d)&&!keep(d)),d=>d.n);
+
+  thinGainSp.text(thinCnt);
+   // for class toggle
+
+  if(bankKeep){
+     // move inverse count into gains (green)
+     thinGainSp.text(thinCnt+invCnt);
+     thinInvSp.text("0").classed("inverse-num",false).classed("thin-num",true);
+  }else{
+     thinInvSp.text(invCnt).classed("thin-num",false).classed("inverse-num",true);
   }
+
+  // circle opacity
+  nodes.attr("opacity",d=> keepOrBank(d) ? 1 : FADE);
+
+  // cutoff line
+  cut.attr("y1",y(11-t)).attr("y2",y(11-t));
+
+  // ROI dot
+  rSvg.select("#roi-cur").attr("cx",rx(t)).attr("cy",ry((REV-(sComb.pd*LGD))*sComb.acc));
+
+  renderHalos(t);
+}
+
 
   slider.on("input",e=>update(+e.target.value));
   update(1);
