@@ -232,7 +232,9 @@ d3.csv(CSV,d3.autoType).then(raw=>{
         benLoanSp=d3.select("#benefit-loan"),benSaveSp=d3.select("#benefit-save"),
         thinGainSp=d3.select("#thin-count"),thinInvSp=d3.select("#inverse-count"),
         toggle=d3.select("#thin-toggle"),
-        halosG=svg.append("g"),halosR=svg.append("g"); let haloOn=false;
+        halosG=svg.append("g"),halosR=svg.append("g");
+let greenOn=false;
+let redOn=false;
 
   /* --- HALOS --- */
   function renderHalos(t){
@@ -294,8 +296,16 @@ d3.csv(CSV,d3.autoType).then(raw=>{
 
   /* --- HIGHLIGHT TOGGLE --- */
   toggle.on("click",function(){
-    haloOn=!haloOn;
-    toggle.classed("active",haloOn).text(haloOn?"Hide":"Highlight");
+    greenOn=!greenOn;
+    toggle.classed("active",greenOn).text(greenOn?"Hide Gains":"Highlight Gains");
+    update(+slider.node().value);
+  });
+
+  // Bank-only button
+  const invBtn=d3.select("#inv-toggle");
+  invBtn.on("click",function(){
+    redOn=!redOn;
+    invBtn.classed("active",redOn).text(redOn?"Hide Bank-Only":"Bank-Only");
     update(+slider.node().value);
   });
 });
