@@ -300,10 +300,6 @@ function update(t){
                .classed("inverse-num",true);
   }
 
-  }else{
-     thinInvSp.text(invCnt).classed("thin-num",false).classed("inverse-num",true);
-  }
-
   // circle opacity
   nodes.attr("opacity",d=> keepOrBank(d) ? 1 : FADE);
 
