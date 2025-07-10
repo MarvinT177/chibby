@@ -131,7 +131,8 @@ svg#scatter>text{fill:#5388ad}
         <span id="thin-count"   class="num-pill thin-num">0</span>
         <span id="inverse-count"class="num-pill inverse-num">0</span>
       </div>
-      <button id="thin-toggle">Highlight</button></div>
+      <button id="thin-toggle">Highlight Gains</button>
+        <button id="inv-toggle">Bank-Only</button></div>
 
     <div class="metric-box" id="roi-box"><h3>ROI Curve</h3><div id="roi-chart"></div></div>
   </div>
@@ -235,16 +236,21 @@ d3.csv(CSV,d3.autoType).then(raw=>{
 
   /* --- HALOS --- */
   function renderHalos(t){
-    const keep=d=>d.comb>=t, bank=d=>d.bank<=11-t,
+    const keep=d=>d.comb>=t,
+          bank=d=>d.bank<=11-t,
           greens=data.filter(d=>keep(d)&&!bank(d)),
           reds  =data.filter(d=>bank(d)&&!keep(d));
-    halosG.selectAll("circle").data(haloOn?greens:[]).join("circle")
-      .attr("cx",d=>x(d.telco)).attr("cy",d=>y(d.bank)).attr("r",14).attr("fill","none")
-      .attr("stroke","var(--thin-green)").attr("stroke-width",2.5).style("animation","pulseG 1.4s ease-out infinite");
-    halosR.selectAll("circle").data(haloOn?reds:[]).join("circle")
-      .attr("cx",d=>x(d.telco)).attr("cy",d=>y(d.bank)).attr("r",14).attr("fill","none")
-      .attr("stroke","var(--inverse-red)").attr("stroke-width",1.6).style("animation","pulseR 1.4s ease-out infinite");
-  }
+
+    halosG.selectAll("circle").data(greenOn?greens:[]).join("circle")
+      .attr("cx",d=>x(d.telco)).attr("cy",d=>y(d.bank)).attr("r",14)
+      .attr("fill","none").attr("stroke","var(--thin-green)").attr("stroke-width",2.5)
+      .style("animation","pulseG 1.4s ease-out infinite");
+
+    halosR.selectAll("circle").data(redOn?reds:[]).join("circle")
+      .attr("cx",d=>x(d.telco)).attr("cy",d=>y(d.bank)).attr("r",14)
+      .attr("fill","none").attr("stroke","var(--inverse-red)").attr("stroke-width",1.6)
+      .style("animation","pulseR 1.4s ease-out infinite");
+}
 
   /* --- UPDATE --- */
   function update(t){
@@ -296,7 +302,6 @@ d3.csv(CSV,d3.autoType).then(raw=>{
 </script>
 </body>
 </html>
-
 
 
 
