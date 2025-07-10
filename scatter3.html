@@ -141,7 +141,7 @@ svg#scatter>text{fill:#5388ad}
 <script>
 /* ---------- CONFIG ---------- */
 const REV=2500,LGD=6500,AVG_LOAN=75000,CSV="data.csv";
-const RAD=10,FADE=.25,BASE=.70;
+const RAD=10,FADE=.25,BASE=1;
 
 /* ---------- SCALES ---------- */
 const svg=d3.select("#scatter"),W=+svg.attr("width"),H=+svg.attr("height"),
@@ -213,7 +213,7 @@ d3.csv(CSV,d3.autoType).then(raw=>{
   const cut=svg.append("line").attr("x1",M.left).attr("x2",W-M.right).attr("stroke","#000").attr("stroke-dasharray","4 4");
 
   /* --- ROI MINI CHART (area fill) --- */
-  const roi=d3.range(1,11).map(t=>{const s=stats(d=>d.comb>=t);return{t,net:(REV-(s.pd*LGD))*s.acc}}),
+  let roi =d3.range(1,11).map(t=>{const s=stats(d=>d.comb>=t);return{t,net:(REV-(s.pd*LGD))*s.acc}}),
         rx=d3.scaleLinear().domain([1,10]).range([0,120]),
         ry=d3.scaleLinear().domain([0,d3.max(roi,d=>d.net)]).range([80,0]);
 
@@ -307,7 +307,7 @@ function update(t){
   cut.attr("y1",y(11-t)).attr("y2",y(11-t));
 
   // ROI dot
-  rSvg.select("#roi-cur").attr("cx",rx(t)).attr("cy",ry((REV-(sComb.pd*LGD))*sComb.acc));
+  rSvg.select("#roi-cur").attr("cx",rx(t)).attr("cy",ry(roi[t-1].net));
 
   renderHalos(t);
 }
